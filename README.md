@@ -80,11 +80,8 @@ Puedes obtener el código fuente de cualquiera de estas dos maneras:
 
 1. En Eclipse, ve a **File → Import... → Gradle → Existing Gradle Project** y pulsa **Next** (si aparece la pantalla de bienvenida de Buildship, pulsa **Next** de nuevo).
 2. En **Project root directory**, haz clic en **Browse...** y selecciona la carpeta raíz del proyecto que acabas de clonar o descomprimir (`Ecoembes` o `ecoembes-prototipo1`). Pulsa **Next**.
-3. En la ventana **Import Options**:
-   - Marca la casilla **Override workspace settings**.
-   - Asegúrate de que está seleccionado **Gradle wrapper** (para usar la versión `8.10.2` incluida en el proyecto).
-   - En **Java home** (dentro de *Advanced Options*), selecciona la ruta de un **JDK 17 o JDK 21 LTS** instalado en tu equipo (por ejemplo, `C:\Program Files\Eclipse Adoptium\jdk-21...`). *Nota: Esto evita problemas si tu instalación de Eclipse trae por defecto un JRE interno experimental superior (como Java 27) aún no soportado por Gradle 8.*
-4. Pulsa **Finish** y espera unos segundos a que Eclipse descargue las dependencias de Spring Boot y sincronice el proyecto.
+3. En la ventana **Import Options**, mantén las opciones por defecto (**Gradle wrapper**) y pulsa **Finish**. Eclipse descargará automáticamente las dependencias de Spring Boot y sincronizará el proyecto usando el JDK configurado en el equipo de cada usuario.
+   - *(Nota de resolución de problemas)*: Si al importar en algún equipo concreto apareciese un error de incompatibilidad de versión de Java en Gradle, se debe a que algunas instalaciones recientes de Eclipse incluyen un JRE interno experimental (como Java 27). En ese caso, basta con ir en Eclipse a **Window → Preferences → Java → Installed JREs** (o **Project → Properties → Gradle**) y seleccionar cualquier **JDK 17 o JDK 21 LTS** instalado en ese ordenador.
 5. *(Opcional)* Si tras importar deseas forzar la actualización de dependencias en cualquier momento, haz clic derecho sobre el proyecto en el *Package Explorer* y selecciona **Gradle → Refresh Gradle Project**.
 
 #### Paso 3. Ejecutar el servidor con Spring Boot y los tests desde Eclipse

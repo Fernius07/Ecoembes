@@ -2,9 +2,6 @@
 build/
 bin/
 out/
-.settings/
-.classpath
-.project
 .idea/
 *.iml
 *.log
