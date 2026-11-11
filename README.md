@@ -1,60 +1,158 @@
-# Proyecto Ecoembes - Prototipo 1
+# Proyecto Ecoembes — Servidor Ecoembes (Prototipo 1)
 
-Repositorio correspondiente a la primera entrega de la asignatura **Diseño de Software** (Universidad de Deusto). Incluye el diseño del API REST, los diagramas UML de clases y secuencia, y la implementación en memoria del **Servidor Ecoembes**.
+Sistema distribuido para la gestión inteligente del reciclaje de envases desarrollado en la asignatura **Diseño de Software** (Facultad de Ingeniería — Universidad de Deusto).
 
-## 1. Requisitos
+---
 
-- **Java:** JDK 17 o superior (configurado con JDK 21 compilando hacia compatibilidad Java 17).
-- **Gradle:** Incluido mediante Gradle Wrapper (`gradlew` / `gradlew.bat`).
-- **Spring Boot:** 3.3.5 (`spring-boot-starter-web`, `spring-boot-starter-validation`).
-- **Swagger / OpenAPI:** `springdoc-openapi-starter-webmvc-ui:2.6.0`.
+## 1. Descripción del Proyecto y Alcance del Prototipo 1
 
-## 2. Ejecución del proyecto
+El sistema **Ecoembes** da soporte a la gestión de contenedores de recogida selectiva equipados con sensores **RecycloBin UltraEye** (que transmiten diariamente el número estimado de envases y el nivel de llenado) y a la asignación de dichos contenedores a plantas de reciclaje externas (**PlasSB Ltd.** y **ContSocket Ltd.**), las cuales publican su capacidad disponible en toneladas con 10 días de antelación.
 
-### Desde Eclipse IDE
-1. Hacer clic derecho sobre el proyecto `ecoembes-prototipo1` -> **Refresh (F5)**.
-2. Abrir `src/main/java/com/ecoembes/EcoembesApplication.java`.
-3. Hacer clic derecho -> **Run As -> Java Application** (o *Spring Boot App*).
-4. Para detener el servidor, pulsar el botón cuadrado rojo (**Terminate**) en la vista **Console**.
+En este **Prototipo 1** se implementa la primera versión funcional del **Servidor Ecoembes**:
+- **Almacenamiento en memoria:** toda la información del dominio (personal, contenedores, históricos diarios, capacidades de plantas y asignaciones) se gestiona en memoria sin base de datos, precargando un conjunto de datos de prueba al iniciar la aplicación (`InicializadorDatos`).
+- **Simulación desacoplada de servicios externos:** la comunicación con las plantas `PlasSB Ltd.` y `ContSocket Ltd.` se simula en la capa de pasarelas (`com.ecoembes.externo`) tras una interfaz común (`PasarelaPlanta`), permitiendo incorporar nuevas plantas de reciclaje sin modificar los servicios de negocio.
+- **Documentación interactiva con Swagger / OpenAPI:** todos los endpoints del API REST están documentados y pueden probarse directamente desde **Swagger UI**.
 
-### Desde terminal
-```bash
-.\gradlew.bat build
-.\gradlew.bat bootRun
-```
+---
 
-## 3. Acceso a Swagger UI
+## 2. Arquitectura y Patrones de Diseño Aplicados
 
-Con el servidor arrancado en el puerto `8080`:
-- **Swagger UI:** http://localhost:8080/swagger-ui/index.html
-
-## 4. Usuarios y datos de prueba iniciales
-
-### Personal de Ecoembes (`InicializadorDatos`)
-| Nombre | Correo (`email`) | Contraseña (`contrasena`) |
-|---|---|---|
-| Ane García | `ane.garcia@ecoembes.com` | `ecoembes123` |
-| Jon Etxebarria | `jon.etxebarria@ecoembes.com` | `ecoembes123` |
-
-### Contenedores cargados en Bilbao
-Se cargan inicialmente 9 contenedores (`CONT-001` a `CONT-009`) repartidos en los códigos postales `48001`, `48002`, `48003` y `48004`, con estados `VERDE`, `NARANJA` y `ROJO` y un histórico de 8 días por contenedor.
-
-### Plantas de reciclaje simuladas
-- **`PLASSB` (PlasSB Ltd.):** Capacidad habitual de `1,50 t` diarias durante los próximos 10 días (y `0,02 t` en el día `hoy + 1` para probar el caso de capacidad insuficiente).
-- **`CONTSOCKET` (ContSocket Ltd.):** Capacidad habitual de `2,00 t` diarias (y `0,04 t` en el día actual para pruebas de límite de capacidad).
-
-## 5. Organización de paquetes
+El servidor sigue una arquitectura en capas organizada bajo el paquete base `com.ecoembes`:
 
 ```text
 com.ecoembes
  ├── fachada       -> EcoembesController (Patrón Façade)
- ├── dto           -> Records DTO de entrada y salida
  ├── servicio      -> ServicioAutenticacion, ServicioContenedores, ServicioPlantas, ServicioAsignaciones (Patrón AppService)
+ ├── dto           -> Records de entrada y salida del API REST (Patrón DTO)
+ ├── ensamblador   -> EnsambladorDTO (Conversión entre objetos de dominio y DTOs)
+ ├── estado        -> EstadoServidor (Patrón StateManagement: gestión de sesiones y tokens activos en memoria)
+ ├── externo       -> PasarelaPlanta, PasarelaPlasSB, PasarelaContSocket, RegistroPasarelasPlanta (Patrón Gateway)
  ├── dominio       -> Contenedor, RegistroEstadoContenedor, PlantaReciclaje, CapacidadDiariaPlanta, PersonalEcoembes, Asignacion, NivelLlenado
- ├── estado        -> EstadoServidor (Patrón StateManagement)
- ├── externo       -> PasarelaPlanta, PasarelaPlasSB, PasarelaContSocket, RegistroPasarelasPlanta
- ├── repositorio   -> Interfaces y repositorios en memoria
- ├── ensamblador   -> EnsambladorDTO
- ├── configuracion -> InicializadorDatos, ConfiguracionOpenApi
- └── excepcion     -> Excepciones y ManejadorGlobalExcepciones
+ ├── repositorio   -> Interfaces de repositorio e implementaciones en memoria (*Memoria)
+ ├── configuracion -> InicializadorDatos y ConfiguracionOpenApi
+ └── excepcion     -> Excepciones de negocio y ManejadorGlobalExcepciones (@RestControllerAdvice)
 ```
+
+- **Patrón *Façade* (`EcoembesController`):** único punto de entrada REST del servidor que centraliza las operaciones del API y delega en la capa de servicios.
+- **Patrón *Application Service* (`com.ecoembes.servicio`):** encapsula toda la lógica de negocio, validaciones, cálculo de niveles de llenado y conversión de envases a toneladas.
+- **Patrón *DTO* y *Assembler* (`com.ecoembes.dto`, `EnsambladorDTO`):** desacopla el modelo de dominio interno de los contratos JSON expuestos a los clientes.
+- **Patrón *State Management* (`EstadoServidor`):** mantiene en memoria un mapa concurrente (`ConcurrentHashMap<String, PersonalEcoembes>`) con los tokens activos (generados a partir del timestamp en milisegundos del inicio de sesión) y el empleado asociado.
+- **Patrón *Gateway* (`PasarelaPlanta`, `RegistroPasarelasPlanta`):** aísla el acceso a las plantas de reciclaje externas para garantizar la extensibilidad del sistema.
+
+---
+
+## 3. Requisitos Previos
+
+- **Java Development Kit (JDK):** versión **17** o **21 LTS** (el proyecto está configurado en `build.gradle` con compatibilidad Java 17 mediante `options.release = 17`).
+- **Gradle:** no requiere instalación manual; el repositorio incluye **Gradle Wrapper** (`gradlew` y `gradlew.bat`, versión 8.10.2).
+- **IDE (opcional):** Eclipse IDE (con plugin *Buildship Gradle Integration*), IntelliJ IDEA o VS Code.
+
+---
+
+## 4. Instalación, Compilación y Ejecución
+
+### Opción A: Ejecución desde línea de comandos (Terminal)
+
+1. Clonar el repositorio o descomprimir el archivo de entrega y situarse en el directorio raíz del proyecto:
+   ```bash
+   git clone https://github.com/Fernius07/Ecoembes.git
+   cd Ecoembes
+   ```
+2. Compilar el proyecto y ejecutar las pruebas unitarias (JUnit 5):
+   ```bash
+   # En Windows (PowerShell / CMD):
+   .\gradlew.bat build
+
+   # En Linux / macOS:
+   ./gradlew build
+   ```
+3. Iniciar el Servidor Ecoembes:
+   ```bash
+   # En Windows:
+   .\gradlew.bat bootRun
+
+   # En Linux / macOS:
+   ./gradlew bootRun
+   ```
+
+### Opción B: Importación y ejecución desde Eclipse IDE
+
+1. En Eclipse, seleccionar **File → Import... → Gradle → Existing Gradle Project** y pulsar **Next**.
+2. En **Project root directory**, seleccionar la carpeta raíz del proyecto.
+3. En las opciones de importación (*Import Options*), mantener seleccionada la opción **Gradle wrapper** (y asegurarse de tener configurado un JDK 17 o 21 en Eclipse) y pulsar **Finish**.
+4. Para arrancar el servidor, localizar la clase `src/main/java/com/ecoembes/EcoembesApplication.java`, hacer clic derecho y seleccionar **Run As → Java Application** (o **Spring Boot App**).
+5. Para ejecutar las pruebas unitarias, hacer clic derecho sobre `src/test/java` y seleccionar **Run As → JUnit Test**.
+
+---
+
+## 5. Uso y Validación del API REST en Swagger UI
+
+Una vez iniciado el servidor, la aplicación escucha en el puerto `8080`:
+
+- **Interfaz Swagger UI:** http://localhost:8080/swagger-ui/index.html
+- **Especificación OpenAPI (JSON):** http://localhost:8080/v3/api-docs
+
+### Resumen de Endpoints del API REST
+
+| Método HTTP | Ruta | Operación en Fachada | Descripción |
+|---|---|---|---|
+| `POST` | `/api/auth/login` | `login` | Autentica a un empleado con email y contraseña y devuelve un `token` (timestamp en ms). |
+| `POST` | `/api/auth/logout?token=` | `logout` | Cierra la sesión activa eliminando el `token` del estado del servidor. |
+| `POST` | `/api/contenedores?token=` | `crearContenedor` | Registra un nuevo contenedor con nivel inicial `VERDE` y `0` envases. |
+| `GET` | `/api/contenedores?token=` | `obtenerContenedores` | Devuelve el listado completo de contenedores registrados y su estado actual. |
+| `GET` | `/api/contenedores?token=&codigoPostal=&fecha=` | `obtenerContenedoresPorZona` | Consulta el estado de los contenedores de un código postal en una fecha concreta. |
+| `GET` | `/api/contenedores/{id}/uso?token=&fechaInicio=&fechaFin=` | `obtenerUsoContenedor` | Obtiene el histórico de estados de un contenedor entre dos fechas. |
+| `PUT` | `/api/contenedores/{id}/estado?token=` | `actualizarEstadoContenedor` | Simula la lectura diaria del sensor *RecycloBin UltraEye* (calcula el nivel si se omite). |
+| `GET` | `/api/plantas?token=` | `obtenerPlantas` | Lista las plantas de reciclaje disponibles en el sistema. |
+| `GET` | `/api/plantas/{id}/capacidad?token=&fecha=` | `obtenerCapacidadPlanta` | Consulta la capacidad disponible (en toneladas) de una planta para una fecha dada. |
+| `POST` | `/api/asignaciones?token=` | `crearAsignacion` | Asigna contenedores a una planta validando capacidad disponible, notifica a la planta y registra auditoría del empleado. |
+
+> **Nota de autenticación:** Todos los endpoints salvo `POST /api/auth/login` requieren pasar un `token` activo como parámetro de consulta (`?token=...`).
+
+---
+
+## 6. Datos de Prueba Precargados (`InicializadorDatos`)
+
+Al arrancar el servidor se cargan automáticamente en memoria los siguientes datos para facilitar las pruebas en Swagger UI:
+
+### 6.1. Credenciales del Personal de Ecoembes
+
+| Nombre | Email (`email`) | Contraseña (`contrasena`) |
+|---|---|---|
+| **Ane García** | `ane.garcia@ecoembes.com` | `ecoembes123` |
+| **Jon Etxebarria** | `jon.etxebarria@ecoembes.com` | `ecoembes123` |
+
+### 6.2. Contenedores en Bilbao (con histórico de los últimos 8 días)
+
+| ID | Dirección | Código Postal | Capacidad Inicial | Envases Actuales | Nivel de Llenado |
+|---|---|---|---|---|---|
+| `CONT-001` | Plaza Circular 1, Abando | `48001` | `2000` | `650` | `VERDE` |
+| `CONT-002` | Calle Buenos Aires 12, Abando | `48001` | `2000` | `1450` | `NARANJA` |
+| `CONT-003` | Alameda Mazarredo 24, Abando | `48001` | `2000` | `1920` | `ROJO` |
+| `CONT-004` | Calle Hurtado de Amézaga 18 | `48002` | `2500` | `800` | `VERDE` |
+| `CONT-005` | Calle Autonomía 10, Indautxu | `48002` | `2500` | `1850` | `NARANJA` |
+| `CONT-006` | Calle San Francisco 32, Bilbao La Vieja | `48003` | `1800` | `520` | `VERDE` |
+| `CONT-007` | Plaza Corazón de María 5 | `48003` | `1800` | `1710` | `ROJO` |
+| `CONT-008` | Calle Santutxu 40, Santutxu | `48004` | `2200` | `900` | `VERDE` |
+| `CONT-009` | Avenida Zumalacárregui 65, Begoña | `48004` | `2200` | `1650` | `NARANJA` |
+
+- **Umbrales de llenado:** `VERDE` (`< 60 %`), `NARANJA` (`60 % – 90 %`), `ROJO` (`> 90 %`).
+- **Conversión de peso:** `0,05 kg` por envase (`toneladas = envases * 0,05 / 1000`).
+
+### 6.3. Plantas de Reciclaje (horizonte de 10 días desde la fecha actual)
+
+| ID Planta | Nombre | Ubicación | Capacidad Diaria Habitual | Escenario de Capacidad Reducida (para pruebas de error `400`) |
+|---|---|---|---|---|
+| `PLASSB` | **PlasSB Ltd.** | Polígono Industrial Asua-Erandio, Bizkaia | `1,50 t` | Día `hoy + 1`: `0,02 t` (máx. 400 envases) |
+| `CONTSOCKET` | **ContSocket Ltd.** | Parque Tecnológico de Zamudio, Bizkaia | `2,00 t` | Día `hoy`: `0,04 t` (máx. 800 envases) |
+
+---
+
+## 7. Documentación Adicional en `/docs`
+
+- [`docs/Entrega_Prototipo1.docx`](docs/Entrega_Prototipo1.docx): Memoria completa de entrega del Prototipo 1.
+- [`docs/diseno_api.md`](docs/diseno_api.md): Especificación detallada del API REST y patrones de diseño.
+- [`docs/decisiones.md`](docs/decisiones.md): Decisiones de diseño y reglas de negocio adoptadas.
+- [`docs/validacion.md`](docs/validacion.md): Tabla de pruebas de validación en Swagger UI y capturas en `docs/capturas/`.
+- `docs/diagramas/`: Diagramas UML de clases y de secuencia en formato PNG, PlantUML (`.puml`) y XMI para Visual Paradigm (`.xmi`).
+- [`docs/Reflexion_IA.md`](docs/Reflexion_IA.md): Documento de reflexión sobre el uso de herramientas de IA Generativa.
