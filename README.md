@@ -11,7 +11,7 @@ El sistema **Ecoembes** da soporte a la gestión de contenedores de recogida sel
 En este **Prototipo 1** se implementa la primera versión funcional del **Servidor Ecoembes**:
 - **Almacenamiento en memoria:** toda la información del dominio (personal, contenedores, históricos diarios, capacidades de plantas y asignaciones) se gestiona en memoria sin base de datos, precargando un conjunto de datos de prueba al iniciar la aplicación (`InicializadorDatos`).
 - **Simulación desacoplada de servicios externos:** la comunicación con las plantas `PlasSB Ltd.` y `ContSocket Ltd.` se simula en la capa de pasarelas (`com.ecoembes.externo`) tras una interfaz común (`PasarelaPlanta`), permitiendo incorporar nuevas plantas de reciclaje sin modificar los servicios de negocio.
-- **Documentación interactiva con Swagger / OpenAPI:** todos los endpoints del API REST están documentados y pueden probarse directamente desde **Swagger UI**.
+- **Documentación interactiva con Swagger / OpenAPI:** todos los puntos de acceso del API REST están documentados y pueden probarse directamente desde la interfaz web de **Swagger UI**.
 
 ---
 
@@ -21,31 +21,31 @@ El servidor sigue una arquitectura en capas organizada bajo el paquete base `com
 
 ```text
 com.ecoembes
- ├── fachada       -> EcoembesController (Patrón Façade)
- ├── servicio      -> ServicioAutenticacion, ServicioContenedores, ServicioPlantas, ServicioAsignaciones (Patrón AppService)
- ├── dto           -> Records de entrada y salida del API REST (Patrón DTO)
- ├── ensamblador   -> EnsambladorDTO (Conversión entre objetos de dominio y DTOs)
- ├── estado        -> EstadoServidor (Patrón StateManagement: gestión de sesiones y tokens activos en memoria)
- ├── externo       -> PasarelaPlanta, PasarelaPlasSB, PasarelaContSocket, RegistroPasarelasPlanta (Patrón Gateway)
+ ├── fachada       -> EcoembesController (Patrón Fachada)
+ ├── servicio      -> ServicioAutenticacion, ServicioContenedores, ServicioPlantas, ServicioAsignaciones (Patrón Servicio de Aplicación)
+ ├── dto           -> Clases de transferencia de datos de entrada y salida del API REST (Patrón DTO)
+ ├── ensamblador   -> EnsambladorDTO (Patrón Ensamblador: conversión entre objetos de dominio y DTOs)
+ ├── estado        -> EstadoServidor (Patrón Gestión de Estado: gestión de sesiones y tokens activos en memoria)
+ ├── externo       -> PasarelaPlanta, PasarelaPlasSB, PasarelaContSocket, RegistroPasarelasPlanta (Patrón Pasarela)
  ├── dominio       -> Contenedor, RegistroEstadoContenedor, PlantaReciclaje, CapacidadDiariaPlanta, PersonalEcoembes, Asignacion, NivelLlenado
  ├── repositorio   -> Interfaces de repositorio e implementaciones en memoria (*Memoria)
  ├── configuracion -> InicializadorDatos y ConfiguracionOpenApi
  └── excepcion     -> Excepciones de negocio y ManejadorGlobalExcepciones (@RestControllerAdvice)
 ```
 
-- **Patrón *Façade* (`EcoembesController`):** único punto de entrada REST del servidor que centraliza las operaciones del API y delega en la capa de servicios.
-- **Patrón *Application Service* (`com.ecoembes.servicio`):** encapsula toda la lógica de negocio, validaciones, cálculo de niveles de llenado y conversión de envases a toneladas.
-- **Patrón *DTO* y *Assembler* (`com.ecoembes.dto`, `EnsambladorDTO`):** desacopla el modelo de dominio interno de los contratos JSON expuestos a los clientes.
-- **Patrón *State Management* (`EstadoServidor`):** mantiene en memoria un mapa concurrente (`ConcurrentHashMap<String, PersonalEcoembes>`) con los tokens activos (generados a partir del timestamp en milisegundos del inicio de sesión) y el empleado asociado.
-- **Patrón *Gateway* (`PasarelaPlanta`, `RegistroPasarelasPlanta`):** aísla el acceso a las plantas de reciclaje externas para garantizar la extensibilidad del sistema.
+- **Patrón Fachada (`EcoembesController`):** único punto de entrada REST del servidor que centraliza las operaciones del API y delega en la capa de servicios. Los nombres de sus métodos coinciden exactamente con los del diseño del API y los diagramas UML de clases y secuencia.
+- **Patrón Servicio de Aplicación (`com.ecoembes.servicio`):** encapsula toda la lógica de negocio, validaciones, cálculo de niveles de llenado y conversión de envases a toneladas.
+- **Patrón DTO y Ensamblador (`com.ecoembes.dto`, `EnsambladorDTO`):** desacopla el modelo de dominio interno de los contratos JSON expuestos a los clientes.
+- **Patrón Gestión de Estado (`EstadoServidor`):** mantiene en memoria un mapa concurrente (`ConcurrentHashMap<String, PersonalEcoembes>`) con los tokens activos (generados a partir de la marca de tiempo en milisegundos del inicio de sesión) y el empleado autenticado.
+- **Patrón Pasarela (`PasarelaPlanta`, `RegistroPasarelasPlanta`):** aísla el acceso a las plantas de reciclaje externas para garantizar la extensibilidad del sistema.
 
 ---
 
 ## 3. Requisitos Previos
 
-- **Java Development Kit (JDK):** versión **17** o **21 LTS** (el proyecto está configurado en `build.gradle` con compatibilidad Java 17 mediante `options.release = 17`).
-- **Gradle:** no requiere instalación manual; el repositorio incluye **Gradle Wrapper** (`gradlew` y `gradlew.bat`, versión 8.10.2).
-- **IDE (opcional):** Eclipse IDE (con plugin *Buildship Gradle Integration*), IntelliJ IDEA o VS Code.
+- **Kit de Desarrollo de Java (JDK):** versión **17**, **21 LTS** o **25** (el proyecto está configurado en `build.gradle` con compatibilidad de código Java 17).
+- **Gradle:** no requiere instalación manual; el repositorio incluye el envoltorio de Gradle (`gradlew` y `gradlew.bat`, versión 9.1.0).
+- **Entorno de desarrollo (opcional):** Eclipse IDE (con el complemento de integración Gradle Buildship), IntelliJ IDEA o VS Code.
 
 ---
 
@@ -60,14 +60,14 @@ A continuación se detallan las dos formas de obtener, configurar y ejecutar el 
 Puedes obtener el código fuente de cualquiera de estas dos maneras:
 
 - **Opción 1 — Conectar y clonar directamente desde GitHub en Eclipse (recomendado para compañeros):**
-  1. En Eclipse, abre la perspectiva de Git desde **Window → Perspective → Open Perspective → Other... → Git** (o ve directamente a **File → Import... → Git → Projects from Git (with smart import)**).
+  1. En Eclipse, abre la vista de importación desde **File → Import... → Git → Projects from Git**.
   2. Selecciona **Clone URI** y pulsa **Next**.
   3. En el campo **URI**, introduce la dirección del repositorio:
      ```text
      https://github.com/Fernius07/Ecoembes.git
      ```
-     *(Los campos Host y Repository path se rellenarán automáticamente; si vas a hacer push como colaborador, introduce tu usuario de GitHub y tu Personal Access Token en Authentication).*
-  4. Pulsa **Next**, asegúrate de que la rama **`main`** está marcada, elige la carpeta local de destino donde se guardará el repositorio y finaliza el clonado (**Cancel** si te pide importar como proyecto general, ya que en el Paso 2 lo importaremos como proyecto Gradle para que configure todas las dependencias).
+     *(Si vas a subir cambios como colaborador del repositorio, introduce tu usuario de GitHub y tu token de acceso personal en el apartado de autenticación).*
+  4. Pulsa **Next**, asegúrate de que la rama **`main`** está marcada, elige la carpeta local de destino donde se guardará el repositorio y finaliza el clonado.
 
 - **Opción 2 — Clonar por consola o descomprimir el ZIP de entrega:**
   - Si prefieres usar Git por terminal:
@@ -78,17 +78,17 @@ Puedes obtener el código fuente de cualquiera de estas dos maneras:
 
 #### Paso 2. Importar y configurar como Proyecto Gradle en Eclipse
 
-1. En Eclipse, ve a **File → Import... → Gradle → Existing Gradle Project** y pulsa **Next** (si aparece la pantalla de bienvenida de Buildship, pulsa **Next** de nuevo).
+1. En Eclipse, ve a **File → Import... → Gradle → Existing Gradle Project** y pulsa **Next**.
 2. En **Project root directory**, haz clic en **Browse...** y selecciona la carpeta raíz del proyecto que acabas de clonar o descomprimir (`Ecoembes` o `ecoembes-prototipo1`). Pulsa **Next**.
 3. En la ventana **Import Options**, mantén las opciones por defecto (**Gradle wrapper**) y pulsa **Finish**. Eclipse descargará automáticamente las dependencias de Spring Boot y sincronizará el proyecto usando el JDK configurado en el equipo de cada usuario.
-   - *(Nota de resolución de problemas)*: Si al importar en algún equipo concreto apareciese un error de incompatibilidad de versión de Java en Gradle, se debe a que algunas instalaciones recientes de Eclipse incluyen un JRE interno experimental (como Java 27). En ese caso, basta con ir en Eclipse a **Window → Preferences → Java → Installed JREs** (o **Project → Properties → Gradle**) y seleccionar cualquier **JDK 17 o JDK 21 LTS** instalado en ese ordenador.
-5. *(Opcional)* Si tras importar deseas forzar la actualización de dependencias en cualquier momento, haz clic derecho sobre el proyecto en el *Package Explorer* y selecciona **Gradle → Refresh Gradle Project**.
+   - *(Nota importante sobre el JDK en Eclipse)*: Si en la ventana **Window → Preferences → Java → Installed JREs** de Eclipse tienes marcado por defecto el JRE interno de Eclipse (`jre (default)` de la carpeta `.p2\pool\plugins`, que suele ser Java 27 experimental), marca en su lugar la casilla de tu JDK instalado (por ejemplo, `jdk-17`, `jdk-21` o `jdk-25`) y pulsa **Apply and Close**.
+4. *(Opcional)* Si en cualquier momento deseas forzar la recarga de dependencias, haz clic derecho sobre el proyecto en el explorador de paquetes y selecciona **Gradle → Refresh Gradle Project**.
 
 #### Paso 3. Ejecutar el servidor con Spring Boot y los tests desde Eclipse
 
 - **Arrancar el Servidor Ecoembes con Spring Boot:**
   - **Desde la vista *Gradle Tasks* de Eclipse:** abre la pestaña **Gradle Tasks** (si no está visible: **Window → Show View → Other... → Gradle → Gradle Tasks**), despliega la carpeta del proyecto → **`application`** y haz doble clic sobre la tarea **`bootRun`**.
-  - **Desde el menú contextual (Spring Tools):** haz clic derecho directamente sobre la carpeta raíz del proyecto en el *Package Explorer* y selecciona **Run As → Spring Boot App**.
+  - **Desde el menú contextual (Spring Tools):** haz clic derecho directamente sobre la carpeta raíz del proyecto en el explorador de paquetes y selecciona **Run As → Spring Boot App**.
   - En la pestaña **Console** de Eclipse verás el arranque de Spring Boot en el puerto `8080` y el mensaje `Datos iniciales del Servidor Ecoembes cargados en memoria.`
 - **Ejecutar las pruebas unitarias:**
   - Desde **Gradle Tasks → verification → `test`** (doble clic), o haciendo clic derecho sobre el proyecto y seleccionando **Run As → JUnit Test**.
@@ -128,22 +128,21 @@ Una vez iniciado el servidor, la aplicación escucha en el puerto `8080`:
 - **Interfaz Swagger UI:** http://localhost:8080/swagger-ui/index.html
 - **Especificación OpenAPI (JSON):** http://localhost:8080/v3/api-docs
 
-### Resumen de Endpoints del API REST
+### Resumen de Operaciones del API REST
 
 | Método HTTP | Ruta | Operación en Fachada | Descripción |
 |---|---|---|---|
-| `POST` | `/api/auth/login` | `login` | Autentica a un empleado con email y contraseña y devuelve un `token` (timestamp en ms). |
+| `POST` | `/api/auth/login` | `login` | Autentica a un empleado con correo y contraseña y devuelve un `token` (marca de tiempo en milisegundos). |
 | `POST` | `/api/auth/logout?token=` | `logout` | Cierra la sesión activa eliminando el `token` del estado del servidor. |
 | `POST` | `/api/contenedores?token=` | `crearContenedor` | Registra un nuevo contenedor con nivel inicial `VERDE` y `0` envases. |
-| `GET` | `/api/contenedores?token=` | `obtenerContenedores` | Devuelve el listado completo de contenedores registrados y su estado actual. |
-| `GET` | `/api/contenedores?token=&codigoPostal=&fecha=` | `obtenerContenedoresPorZona` | Consulta el estado de los contenedores de un código postal en una fecha concreta. |
-| `GET` | `/api/contenedores/{id}/uso?token=&fechaInicio=&fechaFin=` | `obtenerUsoContenedor` | Obtiene el histórico de estados de un contenedor entre dos fechas. |
-| `PUT` | `/api/contenedores/{id}/estado?token=` | `actualizarEstadoContenedor` | Simula la lectura diaria del sensor *RecycloBin UltraEye* (calcula el nivel si se omite). |
+| `GET` | `/api/contenedores?token=` | `obtenerContenedores` / `obtenerContenedoresPorZona` | Si se invoca solo con `token`, devuelve todos los contenedores (`obtenerContenedores`). Si se incluyen los filtros opcionales `codigoPostal` y `fecha`, devuelve el estado de los contenedores de esa zona en esa fecha (`obtenerContenedoresPorZona`). |
+| `GET` | `/api/contenedores/{id}/uso?token=&fechaInicio=&fechaFin=` | `obtenerUsoContenedor` | Obtiene el histórico de estados de un contenedor entre dos fechas a partir de sus registros diarios. |
+| `PUT` | `/api/contenedores/{id}/estado?token=` | `actualizarEstadoContenedor` | Simula la lectura diaria del sensor *RecycloBin UltraEye*: actualiza el estado actual del contenedor y guarda el registro correspondiente a la fecha del día en su histórico. |
 | `GET` | `/api/plantas?token=` | `obtenerPlantas` | Lista las plantas de reciclaje disponibles en el sistema. |
-| `GET` | `/api/plantas/{id}/capacidad?token=&fecha=` | `obtenerCapacidadPlanta` | Consulta la capacidad disponible (en toneladas) de una planta para una fecha dada. |
-| `POST` | `/api/asignaciones?token=` | `crearAsignacion` | Asigna contenedores a una planta validando capacidad disponible, notifica a la planta y registra auditoría del empleado. |
+| `GET` | `/api/plantas/{id}/capacidad?token=&fecha=` | `obtenerCapacidadPlanta` | Consulta la capacidad disponible restante (en toneladas) de una planta para una fecha dada. |
+| `POST` | `/api/asignaciones?token=` | `crearAsignacion` | Calcula las toneladas estimadas, valida la capacidad de la planta, descuenta dicho tonelaje de la capacidad disponible de la planta para esa fecha, notifica a la planta y registra la auditoría del empleado. |
 
-> **Nota de autenticación:** Todos los endpoints salvo `POST /api/auth/login` requieren pasar un `token` activo como parámetro de consulta (`?token=...`).
+> **Nota de autenticación:** Todas las operaciones salvo `POST /api/auth/login` requieren pasar un `token` activo como parámetro de consulta (`?token=...`).
 
 ---
 
@@ -153,7 +152,7 @@ Al arrancar el servidor se cargan automáticamente en memoria los siguientes dat
 
 ### 6.1. Credenciales del Personal de Ecoembes
 
-| ID | Nombre | Email (`email`) | Contraseña (`contrasena`) |
+| ID | Nombre | Correo (`email`) | Contraseña (`contrasena`) |
 |---|---|---|---|
 | `EMP-01` | **Ian Anaya Abascal** | `ian.anaya@ecoembes.com` | `ecoembes123` |
 | `EMP-02` | **Xabier Diaz Garcia** | `xabier.diaz@ecoembes.com` | `ecoembes123` |
@@ -175,7 +174,7 @@ Al arrancar el servidor se cargan automáticamente en memoria los siguientes dat
 | `CONT-009` | Avenida Zumalacárregui 65, Begoña | `48004` | `2200` | `1650` | `NARANJA` |
 
 - **Umbrales de llenado:** `VERDE` (`< 60 %`), `NARANJA` (`60 % – 90 %`), `ROJO` (`> 90 %`).
-- **Conversión de peso:** `0,05 kg` por envase (`toneladas = envases * 0,05 / 1000`).
+- **Conversión de envases a toneladas:** peso medio fijo de `0,05 kg` (50 g) por envase (`toneladasEstimadas = totalEnvases * 0,05 / 1000`).
 
 ### 6.3. Plantas de Reciclaje (horizonte de 10 días desde la fecha actual)
 
