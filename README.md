@@ -130,17 +130,18 @@ Una vez iniciado el servidor, la aplicación escucha en el puerto `8080`:
 
 ### Resumen de Operaciones del API REST
 
-| Método HTTP | Ruta | Operación en Fachada | Descripción |
-|---|---|---|---|
-| `POST` | `/api/auth/login` | `login` | Autentica a un empleado con correo y contraseña y devuelve un `token` (marca de tiempo en milisegundos). |
-| `POST` | `/api/auth/logout?token=` | `logout` | Cierra la sesión activa eliminando el `token` del estado del servidor. |
-| `POST` | `/api/contenedores?token=` | `crearContenedor` | Registra un nuevo contenedor con nivel inicial `VERDE` y `0` envases. |
-| `GET` | `/api/contenedores?token=` | `obtenerContenedores` / `obtenerContenedoresPorZona` | Si se invoca solo con `token`, devuelve todos los contenedores (`obtenerContenedores`). Si se incluyen los filtros opcionales `codigoPostal` y `fecha`, devuelve el estado de los contenedores de esa zona en esa fecha (`obtenerContenedoresPorZona`). |
-| `GET` | `/api/contenedores/{id}/uso?token=&fechaInicio=&fechaFin=` | `obtenerUsoContenedor` | Obtiene el histórico de estados de un contenedor entre dos fechas a partir de sus registros diarios. |
-| `PUT` | `/api/contenedores/{id}/estado?token=` | `actualizarEstadoContenedor` | Simula la lectura diaria del sensor *RecycloBin UltraEye*: actualiza el estado actual del contenedor y guarda el registro correspondiente a la fecha del día en su histórico. |
-| `GET` | `/api/plantas?token=` | `obtenerPlantas` | Lista las plantas de reciclaje disponibles en el sistema. |
-| `GET` | `/api/plantas/{id}/capacidad?token=&fecha=` | `obtenerCapacidadPlanta` | Consulta la capacidad disponible restante (en toneladas) de una planta para una fecha dada. |
-| `POST` | `/api/asignaciones?token=` | `crearAsignacion` | Calcula las toneladas estimadas, valida la capacidad de la planta, descuenta dicho tonelaje de la capacidad disponible de la planta para esa fecha, notifica a la planta y registra la auditoría del empleado. |
+| Operación | HTTP | Ruta | Parámetros | Retorno | Códigos HTTP |
+|---|---|---|---|---|---|
+| `login` | `POST` | `/api/auth/login` | `LoginDTO (email, contrasena)` | `TokenDTO` | `200, 401` |
+| `logout` | `POST` | `/api/auth/logout` | `token` | Vacío | `204, 401` |
+| `crearContenedor` | `POST` | `/api/contenedores` | `token, CrearContenedorDTO (id, direccion, codigoPostal, capacidadInicial)` | `ContenedorDTO` | `201, 400, 401` |
+| `obtenerContenedores` | `GET` | `/api/contenedores` | `token` | `List<ContenedorDTO>` | `200, 401` |
+| `obtenerContenedoresPorZona` | `GET` | `/api/contenedores` | `token, codigoPostal, fecha` | `List<EstadoContenedorDTO>` | `200, 400, 401` |
+| `obtenerUsoContenedor` | `GET` | `/api/contenedores/{id}/uso` | `id, token, fechaInicio, fechaFin` | `List<EstadoContenedorDTO>` | `200, 400, 401, 404` |
+| `actualizarEstadoContenedor` | `PUT` | `/api/contenedores/{id}/estado` | `id, token, ActualizarEstadoDTO (envases, nivelLlenado)` | `EstadoContenedorDTO` | `200, 400, 401, 404` |
+| `obtenerPlantas` | `GET` | `/api/plantas` | `token` | `List<PlantaDTO>` | `200, 401` |
+| `obtenerCapacidadPlanta` | `GET` | `/api/plantas/{id}/capacidad` | `id, token, fecha` | `CapacidadPlantaDTO` | `200, 400, 401, 404` |
+| `crearAsignacion` | `POST` | `/api/asignaciones` | `token, CrearAsignacionDTO (idPlanta, idsContenedores, fecha)` | `AsignacionDTO` | `201, 400, 401, 404` |
 
 > **Nota de autenticación:** Todas las operaciones salvo `POST /api/auth/login` requieren pasar un `token` activo como parámetro de consulta (`?token=...`).
 
