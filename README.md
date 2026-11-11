@@ -87,15 +87,14 @@ Puedes obtener el código fuente de cualquiera de estas dos maneras:
 4. Pulsa **Finish** y espera unos segundos a que Eclipse descargue las dependencias de Spring Boot y sincronice el proyecto.
 5. *(Opcional)* Si tras importar deseas forzar la actualización de dependencias en cualquier momento, haz clic derecho sobre el proyecto en el *Package Explorer* y selecciona **Gradle → Refresh Gradle Project**.
 
-#### Paso 3. Ejecutar el servidor y los tests desde Eclipse
+#### Paso 3. Ejecutar el servidor con Spring Boot y los tests desde Eclipse
 
-- **Arrancar el Servidor Ecoembes:**
-  1. En el *Package Explorer*, despliega `src/main/java` → paquete `com.ecoembes`.
-  2. Haz clic derecho sobre [`EcoembesApplication.java`](src/main/java/com/ecoembes/EcoembesApplication.java) y selecciona **Run As → Java Application** (o **Spring Boot App**).
-  3. En la pestaña **Console** de Eclipse verás el arranque de Spring Boot en el puerto `8080` y el mensaje `Datos iniciales del Servidor Ecoembes cargados en memoria.`
-- **Ejecutar las pruebas unitarias (JUnit 5):**
-  1. Haz clic derecho sobre la carpeta `src/test/java` (o sobre el proyecto).
-  2. Selecciona **Run As → JUnit Test** para verificar que todos los casos de prueba pasan en verde.
+- **Arrancar el Servidor Ecoembes con Spring Boot:**
+  - **Desde la vista *Gradle Tasks* de Eclipse:** abre la pestaña **Gradle Tasks** (si no está visible: **Window → Show View → Other... → Gradle → Gradle Tasks**), despliega la carpeta del proyecto → **`application`** y haz doble clic sobre la tarea **`bootRun`**.
+  - **Desde el menú contextual (Spring Tools):** haz clic derecho directamente sobre la carpeta raíz del proyecto en el *Package Explorer* y selecciona **Run As → Spring Boot App**.
+  - En la pestaña **Console** de Eclipse verás el arranque de Spring Boot en el puerto `8080` y el mensaje `Datos iniciales del Servidor Ecoembes cargados en memoria.`
+- **Ejecutar las pruebas unitarias:**
+  - Desde **Gradle Tasks → verification → `test`** (doble clic), o haciendo clic derecho sobre el proyecto y seleccionando **Run As → JUnit Test**.
 
 ---
 
