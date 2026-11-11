@@ -16,7 +16,7 @@ public record AsignacionDTO(
         @Schema(description = "Nombre de la planta", example = "PlasSB Ltd.")
         String nombrePlanta,
 
-        @Schema(description = "Correo del empleado que realizó la asignación", example = "ane.garcia@ecoembes.com")
+        @Schema(description = "Correo del empleado que realizó la asignación", example = "ian.anaya@ecoembes.com")
         String emailPersonal,
 
         @Schema(description = "Fecha de asignación (yyyy-MM-dd)", example = "2026-11-11")

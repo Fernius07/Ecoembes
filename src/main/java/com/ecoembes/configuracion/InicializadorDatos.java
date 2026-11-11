@@ -48,9 +48,13 @@ public class InicializadorDatos implements CommandLineRunner {
 
     private void cargarPersonal() {
         repositorioPersonal.guardar(new PersonalEcoembes(
-                "EMP-01", "Ane García", "ane.garcia@ecoembes.com", "ecoembes123"));
+                "EMP-01", "Ian Anaya Abascal", "ian.anaya@ecoembes.com", "ecoembes123"));
         repositorioPersonal.guardar(new PersonalEcoembes(
-                "EMP-02", "Jon Etxebarria", "jon.etxebarria@ecoembes.com", "ecoembes123"));
+                "EMP-02", "Xabier Diaz Garcia", "xabier.diaz@ecoembes.com", "ecoembes123"));
+        repositorioPersonal.guardar(new PersonalEcoembes(
+                "EMP-03", "Iker Diaz Lazaro", "iker.diaz@ecoembes.com", "ecoembes123"));
+        repositorioPersonal.guardar(new PersonalEcoembes(
+                "EMP-04", "Iñigo Fernandez Garcia", "inigo.fernandez@ecoembes.com", "ecoembes123"));
     }
 
     private void cargarContenedores() {

@@ -29,17 +29,17 @@ class ServicioAutenticacionTest {
         servicioAutenticacion = new ServicioAutenticacion(repositorioPersonal, estadoServidor);
 
         repositorioPersonal.guardar(new PersonalEcoembes(
-                "EMP-01", "Ane García", "ane.garcia@ecoembes.com", "ecoembes123"));
+                "EMP-01", "Ian Anaya Abascal", "ian.anaya@ecoembes.com", "ecoembes123"));
     }
 
     @Test
     void testLoginCorrecto() {
         TokenDTO respuesta = servicioAutenticacion.login(
-                new LoginDTO("ane.garcia@ecoembes.com", "ecoembes123"));
+                new LoginDTO("ian.anaya@ecoembes.com", "ecoembes123"));
 
         assertNotNull(respuesta.token());
-        assertEquals("ane.garcia@ecoembes.com", respuesta.email());
-        assertEquals("Ane García", respuesta.nombre());
+        assertEquals("ian.anaya@ecoembes.com", respuesta.email());
+        assertEquals("Ian Anaya Abascal", respuesta.nombre());
         assertTrue(estadoServidor.esTokenActivo(respuesta.token()));
 
         PersonalEcoembes validado = servicioAutenticacion.validarToken(respuesta.token());
@@ -49,7 +49,7 @@ class ServicioAutenticacionTest {
     @Test
     void testLoginCredencialesIncorrectas() {
         assertThrows(ExcepcionNoAutorizado.class, () ->
-                servicioAutenticacion.login(new LoginDTO("ane.garcia@ecoembes.com", "incorrecta")));
+                servicioAutenticacion.login(new LoginDTO("ian.anaya@ecoembes.com", "incorrecta")));
 
         assertThrows(ExcepcionNoAutorizado.class, () ->
                 servicioAutenticacion.login(new LoginDTO("otro@ecoembes.com", "ecoembes123")));
@@ -58,7 +58,7 @@ class ServicioAutenticacionTest {
     @Test
     void testLogoutEliminaToken() {
         TokenDTO respuesta = servicioAutenticacion.login(
-                new LoginDTO("ane.garcia@ecoembes.com", "ecoembes123"));
+                new LoginDTO("ian.anaya@ecoembes.com", "ecoembes123"));
         String token = respuesta.token();
 
         servicioAutenticacion.logout(token);

@@ -52,7 +52,7 @@ class ServicioAsignacionesTest {
         servicioAsignaciones = new ServicioAsignaciones(
                 repositorioContenedores, repositorioPlantas, repositorioAsignaciones, registroPasarelas, ensamblador);
 
-        personal = new PersonalEcoembes("EMP-01", "Ane García", "ane.garcia@ecoembes.com", "ecoembes123");
+        personal = new PersonalEcoembes("EMP-01", "Ian Anaya Abascal", "ian.anaya@ecoembes.com", "ecoembes123");
         hoy = LocalDate.now();
 
         repositorioContenedores.guardar(new Contenedor("CONT-001", "Plaza Circular 1", "48001", 2000, 1000, NivelLlenado.VERDE));
@@ -73,7 +73,7 @@ class ServicioAsignacionesTest {
 
         assertNotNull(resultado.id());
         assertEquals("PLASSB", resultado.idPlanta());
-        assertEquals("ane.garcia@ecoembes.com", resultado.emailPersonal());
+        assertEquals("ian.anaya@ecoembes.com", resultado.emailPersonal());
         assertEquals(2, resultado.totalContenedores());
         assertEquals(2500, resultado.totalEnvases());
         assertEquals(0.125, resultado.toneladasEstimadas(), 0.0001);

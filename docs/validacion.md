@@ -4,7 +4,7 @@ Resumen de las pruebas realizadas desde la interfaz de Swagger UI (`http://local
 
 | # | Operación | Datos de entrada | Resultado esperado | Resultado obtenido | Captura |
 |---|---|---|---|---|---|
-| 01 | `POST /api/auth/login` | `email: ane.garcia@ecoembes.com`, `contrasena: ecoembes123` | `200 OK` con token de sesión | `200 OK` | `capturas/01_login_ok.png` |
+| 01 | `POST /api/auth/login` | `email: ian.anaya@ecoembes.com`, `contrasena: ecoembes123` | `200 OK` con token de sesión | `200 OK` | `capturas/01_login_ok.png` |
 | 02 | `POST /api/auth/login` | Contraseña incorrecta | `401 Unauthorized` | `401 Unauthorized` | `capturas/02_login_error_401.png` |
 | 03 | `GET /api/contenedores` | `token` activo | `200 OK` con la lista de contenedores | `200 OK` (9 contenedores) | `capturas/03_get_containers_ok.png` |
 | 04 | `GET /api/contenedores` (por zona) | `codigoPostal=48001`, `fecha=2026-11-11` | `200 OK` con estados de la zona `48001` | `200 OK` (3 contenedores) | `capturas/04_get_containers_zone_ok.png` |

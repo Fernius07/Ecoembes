@@ -117,10 +117,12 @@ Al arrancar el servidor se cargan automáticamente en memoria los siguientes dat
 
 ### 6.1. Credenciales del Personal de Ecoembes
 
-| Nombre | Email (`email`) | Contraseña (`contrasena`) |
-|---|---|---|
-| **Ane García** | `ane.garcia@ecoembes.com` | `ecoembes123` |
-| **Jon Etxebarria** | `jon.etxebarria@ecoembes.com` | `ecoembes123` |
+| ID | Nombre | Email (`email`) | Contraseña (`contrasena`) |
+|---|---|---|---|
+| `EMP-01` | **Ian Anaya Abascal** | `ian.anaya@ecoembes.com` | `ecoembes123` |
+| `EMP-02` | **Xabier Diaz Garcia** | `xabier.diaz@ecoembes.com` | `ecoembes123` |
+| `EMP-03` | **Iker Diaz Lazaro** | `iker.diaz@ecoembes.com` | `ecoembes123` |
+| `EMP-04` | **Iñigo Fernandez Garcia** | `inigo.fernandez@ecoembes.com` | `ecoembes123` |
 
 ### 6.2. Contenedores en Bilbao (con histórico de los últimos 8 días)
 
