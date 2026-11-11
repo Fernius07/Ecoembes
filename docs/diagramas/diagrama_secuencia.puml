@@ -1,0 +1,113 @@
+@startuml diagrama_secuencia
+autonumber
+skinparam shadowing false
+skinparam roundcorner 6
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+skinparam sequenceMessageAlign center
+
+title Diagrama de Secuencia a Nivel de Componentes - Sistema Ecoembes (Prototipo 1)
+
+actor "Cliente\n(Personal Ecoembes / Sensor)" as Cliente
+participant "Servidor Ecoembes\n<<Component>>" as Servidor
+participant "PlasSB Ltd.\n<<Servicio Externo>>" as PlasSB
+participant "ContSocket Ltd.\n<<Servicio Externo>>" as ContSocket
+
+== 1. Inicio de Sesión (Login) ==
+Cliente -> Servidor : POST /api/auth/login\nLoginDTO {email, contrasena}
+activate Servidor
+Servidor -> Servidor : Valida credenciales y guarda\ntoken (timestamp) en EstadoServidor
+Servidor --> Cliente : 200 OK - TokenDTO {token, email, nombre}
+deactivate Servidor
+
+== 2. Gestión y Consulta de Contenedores ==
+Cliente -> Servidor : POST /api/contenedores?token={token}\nCrearContenedorDTO {id, direccion, codigoPostal, capacidadInicial}
+activate Servidor
+Servidor --> Cliente : 201 Created - ContenedorDTO
+deactivate Servidor
+
+Cliente -> Servidor : PUT /api/contenedores/{id}/estado?token={token}\nActualizarEstadoDTO {envases, nivelLlenado}
+activate Servidor
+Servidor --> Cliente : 200 OK - EstadoContenedorDTO
+deactivate Servidor
+
+Cliente -> Servidor : GET /api/contenedores?token={token}
+activate Servidor
+Servidor --> Cliente : 200 OK - List<ContenedorDTO>
+deactivate Servidor
+
+Cliente -> Servidor : GET /api/contenedores?token={token}&codigoPostal=48001&fecha=2026-11-11
+activate Servidor
+Servidor --> Cliente : 200 OK - List<EstadoContenedorDTO>
+deactivate Servidor
+
+Cliente -> Servidor : GET /api/contenedores/{id}/uso?token={token}&fechaInicio=2026-11-04&fechaFin=2026-11-11
+activate Servidor
+Servidor --> Cliente : 200 OK - List<EstadoContenedorDTO>
+deactivate Servidor
+
+== 3. Consulta de Plantas y Capacidad Disponible ==
+Cliente -> Servidor : GET /api/plantas?token={token}
+activate Servidor
+Servidor --> Cliente : 200 OK - List<PlantaDTO>
+deactivate Servidor
+
+Cliente -> Servidor : GET /api/plantas/PLASSB/capacidad?token={token}&fecha={fecha}
+activate Servidor
+Servidor -> PlasSB : consultarCapacidad(fecha)
+activate PlasSB
+PlasSB --> Servidor : toneladasDisponibles (double)
+deactivate PlasSB
+Servidor --> Cliente : 200 OK - CapacidadPlantaDTO {idPlanta="PLASSB", nombre, fecha, toneladasDisponibles}
+deactivate Servidor
+
+Cliente -> Servidor : GET /api/plantas/CONTSOCKET/capacidad?token={token}&fecha={fecha}
+activate Servidor
+Servidor -> ContSocket : consultarCapacidad(fecha)
+activate ContSocket
+ContSocket --> Servidor : toneladasDisponibles (double)
+deactivate ContSocket
+Servidor --> Cliente : 200 OK - CapacidadPlantaDTO {idPlanta="CONTSOCKET", nombre, fecha, toneladasDisponibles}
+deactivate Servidor
+
+== 4. Asignación de Contenedores a Planta de Reciclaje ==
+Cliente -> Servidor : POST /api/asignaciones?token={token}\nCrearAsignacionDTO {idPlanta="PLASSB", idsContenedores, fecha}
+activate Servidor
+Servidor -> Servidor : Valida token (EstadoServidor), contenedores,\nfecha (<= 10 días) y calcula toneladas (envases * 0,05 kg)
+Servidor -> PlasSB : consultarCapacidad(fecha)
+activate PlasSB
+PlasSB --> Servidor : toneladasDisponibles
+deactivate PlasSB
+
+alt Capacidad disponible suficiente (toneladasEstimadas <= toneladasDisponibles)
+    Servidor -> PlasSB : reducirCapacidad(fecha, toneladasEstimadas)
+    activate PlasSB
+    PlasSB --> Servidor : OK
+    deactivate PlasSB
+    Servidor -> PlasSB : notificarAsignacion(fecha, totalContenedores, totalEnvases, toneladasEstimadas)
+    activate PlasSB
+    PlasSB --> Servidor : Confirmación de notificación
+    deactivate PlasSB
+    Servidor -> Servidor : Guarda Asignacion con emailPersonal (auditoría)
+    Servidor --> Cliente : 201 Created - AsignacionDTO {id, idPlanta, emailPersonal, fecha, totalContenedores, totalEnvases, toneladasEstimadas}
+else Capacidad insuficiente (toneladasEstimadas > toneladasDisponibles)
+    Servidor --> Cliente : 400 Bad Request - ErrorDTO\n{"mensaje": "Capacidad disponible insuficiente en la planta..."}
+end
+deactivate Servidor
+
+== 5. Cierre de Sesión (Logout) y Comprobación de Token Inválido ==
+Cliente -> Servidor : POST /api/auth/logout?token={token}
+activate Servidor
+Servidor -> Servidor : Elimina token de EstadoServidor
+Servidor --> Cliente : 204 No Content
+deactivate Servidor
+
+alt Petición con token caducado tras Logout
+    Cliente -> Servidor : GET /api/contenedores?token={token}
+    activate Servidor
+    Servidor -> Servidor : Comprueba token en EstadoServidor (no activo)
+    Servidor --> Cliente : 401 Unauthorized - ErrorDTO\n{"mensaje": "Token inválido o sesión caducada"}
+    deactivate Servidor
+end
+
+@enduml

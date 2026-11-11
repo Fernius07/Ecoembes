@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xmi:XMI xmi:version="2.1"
+         xmlns:uml="http://schema.omg.org/spec/UML/2.1"
+         xmlns:xmi="http://schema.omg.org/spec/XMI/2.1">
+  <xmi:Documentation exporter="Visual Paradigm" exporterVersion="17.0"/>
+  <uml:Model xmi:id="model_ecoembes" name="ServidorEcoembes_Prototipo1">
+
+    <!-- Estereotipos de Patrones -->
+    <packagedElement xmi:type="uml:Stereotype" xmi:id="st_facade" name="Façade"/>
+    <packagedElement xmi:type="uml:Stereotype" xmi:id="st_appservice" name="AppService"/>
+    <packagedElement xmi:type="uml:Stereotype" xmi:id="st_dto" name="DTO"/>
+    <packagedElement xmi:type="uml:Stereotype" xmi:id="st_state" name="StateManagement"/>
+    <packagedElement xmi:type="uml:Stereotype" xmi:id="st_gateway" name="Gateway"/>
+    <packagedElement xmi:type="uml:Stereotype" xmi:id="st_repo" name="Repository"/>
+    <packagedElement xmi:type="uml:Stereotype" xmi:id="st_assembler" name="Assembler"/>
+
+    <!-- Paquete com.ecoembes.fachada -->
+    <packagedElement xmi:type="uml:Package" xmi:id="pkg_fachada" name="com.ecoembes.fachada">
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_EcoembesController" name="EcoembesController">
+        <ownedAttribute xmi:id="att_ec_auth" name="servicioAutenticacion" visibility="private" type="cls_ServicioAutenticacion"/>
+        <ownedAttribute xmi:id="att_ec_cont" name="servicioContenedores" visibility="private" type="cls_ServicioContenedores"/>
+        <ownedAttribute xmi:id="att_ec_plant" name="servicioPlantas" visibility="private" type="cls_ServicioPlantas"/>
+        <ownedAttribute xmi:id="att_ec_asig" name="servicioAsignaciones" visibility="private" type="cls_ServicioAsignaciones"/>
+        <ownedOperation xmi:id="op_login" name="login" visibility="public"/>
+        <ownedOperation xmi:id="op_logout" name="logout" visibility="public"/>
+        <ownedOperation xmi:id="op_crearContenedor" name="crearContenedor" visibility="public"/>
+        <ownedOperation xmi:id="op_obtenerContenedores" name="obtenerContenedores" visibility="public"/>
+        <ownedOperation xmi:id="op_obtenerContenedoresPorZona" name="obtenerContenedoresPorZona" visibility="public"/>
+        <ownedOperation xmi:id="op_obtenerUsoContenedor" name="obtenerUsoContenedor" visibility="public"/>
+        <ownedOperation xmi:id="op_actualizarEstadoContenedor" name="actualizarEstadoContenedor" visibility="public"/>
+        <ownedOperation xmi:id="op_obtenerPlantas" name="obtenerPlantas" visibility="public"/>
+        <ownedOperation xmi:id="op_obtenerCapacidadPlanta" name="obtenerCapacidadPlanta" visibility="public"/>
+        <ownedOperation xmi:id="op_crearAsignacion" name="crearAsignacion" visibility="public"/>
+      </packagedElement>
+    </packagedElement>
+
+    <!-- Paquete com.ecoembes.servicio -->
+    <packagedElement xmi:type="uml:Package" xmi:id="pkg_servicio" name="com.ecoembes.servicio">
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_ServicioAutenticacion" name="ServicioAutenticacion">
+        <ownedAttribute xmi:id="att_sa_repo" name="repositorioPersonal" visibility="private" type="ifc_RepositorioPersonal"/>
+        <ownedAttribute xmi:id="att_sa_estado" name="estadoServidor" visibility="private" type="cls_EstadoServidor"/>
+        <ownedOperation xmi:id="op_sa_login" name="login" visibility="public"/>
+        <ownedOperation xmi:id="op_sa_logout" name="logout" visibility="public"/>
+        <ownedOperation xmi:id="op_sa_validar" name="validarToken" visibility="public"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_ServicioContenedores" name="ServicioContenedores">
+        <ownedAttribute xmi:id="att_sc_repo" name="repositorioContenedores" visibility="private" type="ifc_RepositorioContenedores"/>
+        <ownedAttribute xmi:id="att_sc_ens" name="ensamblador" visibility="private" type="cls_EnsambladorDTO"/>
+        <ownedOperation xmi:id="op_sc_crear" name="crearContenedor" visibility="public"/>
+        <ownedOperation xmi:id="op_sc_todos" name="obtenerContenedores" visibility="public"/>
+        <ownedOperation xmi:id="op_sc_zona" name="obtenerContenedoresPorZona" visibility="public"/>
+        <ownedOperation xmi:id="op_sc_uso" name="obtenerUsoContenedor" visibility="public"/>
+        <ownedOperation xmi:id="op_sc_act" name="actualizarEstadoContenedor" visibility="public"/>
+        <ownedOperation xmi:id="op_sc_calc" name="calcularNivelLlenado" visibility="public"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_ServicioPlantas" name="ServicioPlantas">
+        <ownedAttribute xmi:id="att_sp_repo" name="repositorioPlantas" visibility="private" type="ifc_RepositorioPlantas"/>
+        <ownedAttribute xmi:id="att_sp_reg" name="registroPasarelas" visibility="private" type="cls_RegistroPasarelasPlanta"/>
+        <ownedAttribute xmi:id="att_sp_ens" name="ensamblador" visibility="private" type="cls_EnsambladorDTO"/>
+        <ownedOperation xmi:id="op_sp_todas" name="obtenerPlantas" visibility="public"/>
+        <ownedOperation xmi:id="op_sp_cap" name="obtenerCapacidadPlanta" visibility="public"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_ServicioAsignaciones" name="ServicioAsignaciones">
+        <ownedAttribute xmi:id="att_sas_peso" name="PESO_ENVASE_KG" visibility="public" isStatic="true"/>
+        <ownedAttribute xmi:id="att_sas_dias" name="DIAS_MAXIMOS_ANTELACION" visibility="public" isStatic="true"/>
+        <ownedAttribute xmi:id="att_sas_rc" name="repositorioContenedores" visibility="private" type="ifc_RepositorioContenedores"/>
+        <ownedAttribute xmi:id="att_sas_rp" name="repositorioPlantas" visibility="private" type="ifc_RepositorioPlantas"/>
+        <ownedAttribute xmi:id="att_sas_ra" name="repositorioAsignaciones" visibility="private" type="ifc_RepositorioAsignaciones"/>
+        <ownedAttribute xmi:id="att_sas_reg" name="registroPasarelas" visibility="private" type="cls_RegistroPasarelasPlanta"/>
+        <ownedAttribute xmi:id="att_sas_ens" name="ensamblador" visibility="private" type="cls_EnsambladorDTO"/>
+        <ownedOperation xmi:id="op_sas_crear" name="crearAsignacion" visibility="public"/>
+        <ownedOperation xmi:id="op_sas_calc" name="calcularToneladas" visibility="public"/>
+      </packagedElement>
+    </packagedElement>
+
+    <!-- Paquete com.ecoembes.estado -->
+    <packagedElement xmi:type="uml:Package" xmi:id="pkg_estado" name="com.ecoembes.estado">
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_EstadoServidor" name="EstadoServidor">
+        <ownedAttribute xmi:id="att_es_sesiones" name="sesionesActivas" visibility="private"/>
+        <ownedOperation xmi:id="op_es_crear" name="crearSesion" visibility="public"/>
+        <ownedOperation xmi:id="op_es_obtener" name="obtenerPersonalPorToken" visibility="public"/>
+        <ownedOperation xmi:id="op_es_cerrar" name="cerrarSesion" visibility="public"/>
+        <ownedOperation xmi:id="op_es_activo" name="esTokenActivo" visibility="public"/>
+      </packagedElement>
+    </packagedElement>
+
+    <!-- Paquete com.ecoembes.externo -->
+    <packagedElement xmi:type="uml:Package" xmi:id="pkg_externo" name="com.ecoembes.externo">
+      <packagedElement xmi:type="uml:Interface" xmi:id="ifc_PasarelaPlanta" name="PasarelaPlanta">
+        <ownedOperation xmi:id="op_pp_id" name="obtenerIdPlanta" visibility="public"/>
+        <ownedOperation xmi:id="op_pp_nom" name="obtenerNombrePlanta" visibility="public"/>
+        <ownedOperation xmi:id="op_pp_cap" name="consultarCapacidad" visibility="public"/>
+        <ownedOperation xmi:id="op_pp_red" name="reducirCapacidad" visibility="public"/>
+        <ownedOperation xmi:id="op_pp_not" name="notificarAsignacion" visibility="public"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_PasarelaPlasSB" name="PasarelaPlasSB">
+        <interfaceRealization xmi:id="ir_plassb" supplier="ifc_PasarelaPlanta" client="cls_PasarelaPlasSB" contract="ifc_PasarelaPlanta"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_PasarelaContSocket" name="PasarelaContSocket">
+        <interfaceRealization xmi:id="ir_contsocket" supplier="ifc_PasarelaPlanta" client="cls_PasarelaContSocket" contract="ifc_PasarelaPlanta"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_RegistroPasarelasPlanta" name="RegistroPasarelasPlanta">
+        <ownedOperation xmi:id="op_rpp_obt" name="obtenerPasarela" visibility="public"/>
+      </packagedElement>
+    </packagedElement>
+
+    <!-- Paquete com.ecoembes.repositorio -->
+    <packagedElement xmi:type="uml:Package" xmi:id="pkg_repositorio" name="com.ecoembes.repositorio">
+      <packagedElement xmi:type="uml:Interface" xmi:id="ifc_RepositorioPersonal" name="RepositorioPersonal"/>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_RepositorioPersonalMemoria" name="RepositorioPersonalMemoria">
+        <interfaceRealization xmi:id="ir_rp" supplier="ifc_RepositorioPersonal" client="cls_RepositorioPersonalMemoria" contract="ifc_RepositorioPersonal"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Interface" xmi:id="ifc_RepositorioContenedores" name="RepositorioContenedores"/>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_RepositorioContenedoresMemoria" name="RepositorioContenedoresMemoria">
+        <interfaceRealization xmi:id="ir_rc" supplier="ifc_RepositorioContenedores" client="cls_RepositorioContenedoresMemoria" contract="ifc_RepositorioContenedores"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Interface" xmi:id="ifc_RepositorioPlantas" name="RepositorioPlantas"/>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_RepositorioPlantasMemoria" name="RepositorioPlantasMemoria">
+        <interfaceRealization xmi:id="ir_rpl" supplier="ifc_RepositorioPlantas" client="cls_RepositorioPlantasMemoria" contract="ifc_RepositorioPlantas"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Interface" xmi:id="ifc_RepositorioAsignaciones" name="RepositorioAsignaciones"/>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_RepositorioAsignacionesMemoria" name="RepositorioAsignacionesMemoria">
+        <interfaceRealization xmi:id="ir_ra" supplier="ifc_RepositorioAsignaciones" client="cls_RepositorioAsignacionesMemoria" contract="ifc_RepositorioAsignaciones"/>
+      </packagedElement>
+    </packagedElement>
+
+    <!-- Paquete com.ecoembes.ensamblador -->
+    <packagedElement xmi:type="uml:Package" xmi:id="pkg_ensamblador" name="com.ecoembes.ensamblador">
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_EnsambladorDTO" name="EnsambladorDTO">
+        <ownedOperation xmi:id="op_ens_c" name="aContenedorDTO" visibility="public"/>
+        <ownedOperation xmi:id="op_ens_ec" name="aEstadoContenedorDTO" visibility="public"/>
+        <ownedOperation xmi:id="op_ens_p" name="aPlantaDTO" visibility="public"/>
+        <ownedOperation xmi:id="op_ens_cp" name="aCapacidadPlantaDTO" visibility="public"/>
+        <ownedOperation xmi:id="op_ens_a" name="aAsignacionDTO" visibility="public"/>
+      </packagedElement>
+    </packagedElement>
+
+    <!-- Paquete com.ecoembes.dto -->
+    <packagedElement xmi:type="uml:Package" xmi:id="pkg_dto" name="com.ecoembes.dto">
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_LoginDTO" name="LoginDTO"/>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_TokenDTO" name="TokenDTO"/>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_CrearContenedorDTO" name="CrearContenedorDTO"/>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_ContenedorDTO" name="ContenedorDTO"/>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_EstadoContenedorDTO" name="EstadoContenedorDTO"/>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_ActualizarEstadoDTO" name="ActualizarEstadoDTO"/>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_PlantaDTO" name="PlantaDTO"/>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_CapacidadPlantaDTO" name="CapacidadPlantaDTO"/>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_CrearAsignacionDTO" name="CrearAsignacionDTO"/>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_AsignacionDTO" name="AsignacionDTO"/>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_ErrorDTO" name="ErrorDTO"/>
+    </packagedElement>
+
+    <!-- Paquete com.ecoembes.dominio -->
+    <packagedElement xmi:type="uml:Package" xmi:id="pkg_dominio" name="com.ecoembes.dominio">
+      <packagedElement xmi:type="uml:Enumeration" xmi:id="enm_NivelLlenado" name="NivelLlenado">
+        <ownedLiteral xmi:id="lit_verde" name="VERDE"/>
+        <ownedLiteral xmi:id="lit_naranja" name="NARANJA"/>
+        <ownedLiteral xmi:id="lit_rojo" name="ROJO"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Contenedor" name="Contenedor">
+        <ownedAttribute xmi:id="att_c_id" name="id" visibility="private"/>
+        <ownedAttribute xmi:id="att_c_dir" name="direccion" visibility="private"/>
+        <ownedAttribute xmi:id="att_c_cp" name="codigoPostal" visibility="private"/>
+        <ownedAttribute xmi:id="att_c_cap" name="capacidadInicial" visibility="private"/>
+        <ownedAttribute xmi:id="att_c_env" name="envasesActuales" visibility="private"/>
+        <ownedAttribute xmi:id="att_c_niv" name="nivelLlenado" visibility="private" type="enm_NivelLlenado"/>
+        <ownedAttribute xmi:id="att_c_hist" name="historial" visibility="private" type="cls_RegistroEstadoContenedor"/>
+        <ownedOperation xmi:id="op_c_reg" name="registrarEstado" visibility="public"/>
+        <ownedOperation xmi:id="op_c_est" name="obtenerEstadoEnFecha" visibility="public"/>
+        <ownedOperation xmi:id="op_c_his" name="obtenerHistorialEntreFechas" visibility="public"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_RegistroEstadoContenedor" name="RegistroEstadoContenedor">
+        <ownedAttribute xmi:id="att_rec_fec" name="fecha" visibility="private"/>
+        <ownedAttribute xmi:id="att_rec_env" name="envases" visibility="private"/>
+        <ownedAttribute xmi:id="att_rec_niv" name="nivelLlenado" visibility="private" type="enm_NivelLlenado"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_PlantaReciclaje" name="PlantaReciclaje">
+        <ownedAttribute xmi:id="att_pr_id" name="id" visibility="private"/>
+        <ownedAttribute xmi:id="att_pr_nom" name="nombre" visibility="private"/>
+        <ownedAttribute xmi:id="att_pr_ubi" name="ubicacion" visibility="private"/>
+        <ownedAttribute xmi:id="att_pr_cap" name="capacidadesDiarias" visibility="private" type="cls_CapacidadDiariaPlanta"/>
+        <ownedOperation xmi:id="op_pr_obt" name="obtenerCapacidadEnFecha" visibility="public"/>
+        <ownedOperation xmi:id="op_pr_est" name="establecerCapacidadEnFecha" visibility="public"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_CapacidadDiariaPlanta" name="CapacidadDiariaPlanta">
+        <ownedAttribute xmi:id="att_cdp_fec" name="fecha" visibility="private"/>
+        <ownedAttribute xmi:id="att_cdp_max" name="toneladasMaximas" visibility="private"/>
+        <ownedAttribute xmi:id="att_cdp_disp" name="toneladasDisponibles" visibility="private"/>
+        <ownedOperation xmi:id="op_cdp_red" name="reducirToneladasDisponibles" visibility="public"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_PersonalEcoembes" name="PersonalEcoembes">
+        <ownedAttribute xmi:id="att_pe_id" name="id" visibility="private"/>
+        <ownedAttribute xmi:id="att_pe_nom" name="nombre" visibility="private"/>
+        <ownedAttribute xmi:id="att_pe_ema" name="email" visibility="private"/>
+        <ownedAttribute xmi:id="att_pe_con" name="contrasena" visibility="private"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Asignacion" name="Asignacion">
+        <ownedAttribute xmi:id="att_a_id" name="id" visibility="private"/>
+        <ownedAttribute xmi:id="att_a_pl" name="planta" visibility="private" type="cls_PlantaReciclaje"/>
+        <ownedAttribute xmi:id="att_a_per" name="personal" visibility="private" type="cls_PersonalEcoembes"/>
+        <ownedAttribute xmi:id="att_a_cont" name="contenedores" visibility="private" type="cls_Contenedor"/>
+        <ownedAttribute xmi:id="att_a_fec" name="fecha" visibility="private"/>
+        <ownedAttribute xmi:id="att_a_env" name="totalEnvases" visibility="private"/>
+        <ownedAttribute xmi:id="att_a_ton" name="toneladasEstimadas" visibility="private"/>
+      </packagedElement>
+    </packagedElement>
+
+    <!-- Interacción del Diagrama de Secuencia a Nivel de Componentes -->
+    <packagedElement xmi:type="uml:Collaboration" xmi:id="collab_secuencia" name="SistemaEcoembes_Componentes">
+      <ownedBehavior xmi:type="uml:Interaction" xmi:id="inter_secuencia" name="DiagramaSecuenciaComponentes">
+        <lifeline xmi:id="ll_cliente" name="Cliente"/>
+        <lifeline xmi:id="ll_servidor" name="Servidor Ecoembes"/>
+        <lifeline xmi:id="ll_plassb" name="PlasSB Ltd."/>
+        <lifeline xmi:id="ll_contsocket" name="ContSocket Ltd."/>
+        <message xmi:id="msg_1" name="POST /api/auth/login (LoginDTO)"/>
+        <message xmi:id="msg_2" name="200 OK (TokenDTO)"/>
+        <message xmi:id="msg_3" name="GET /api/contenedores?token={token}"/>
+        <message xmi:id="msg_4" name="GET /api/plantas/PLASSB/capacidad?token={token}&amp;fecha={fecha}"/>
+        <message xmi:id="msg_5" name="consultarCapacidad(fecha)"/>
+        <message xmi:id="msg_6" name="POST /api/asignaciones?token={token} (CrearAsignacionDTO)"/>
+        <message xmi:id="msg_7" name="notificarAsignacion(fecha, totalContenedores, totalEnvases, toneladasEstimadas)"/>
+        <message xmi:id="msg_8" name="POST /api/auth/logout?token={token}"/>
+      </ownedBehavior>
+    </packagedElement>
+
+  </uml:Model>
+</xmi:XMI>

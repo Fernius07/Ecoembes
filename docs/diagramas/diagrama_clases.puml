@@ -1,0 +1,371 @@
+@startuml diagrama_clases
+top to bottom direction
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam roundcorner 6
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+skinparam nodesep 35
+skinparam ranksep 45
+
+title Diagrama de Clases UML - Servidor Ecoembes (Prototipo 1)
+
+package "com.ecoembes.fachada" as pkg_fachada {
+    class EcoembesController <<Façade>> {
+        - servicioAutenticacion : ServicioAutenticacion
+        - servicioContenedores : ServicioContenedores
+        - servicioPlantas : ServicioPlantas
+        - servicioAsignaciones : ServicioAsignaciones
+        + login(peticion : LoginDTO) : ResponseEntity<TokenDTO>
+        + logout(token : String) : ResponseEntity<Void>
+        + crearContenedor(token : String, peticion : CrearContenedorDTO) : ResponseEntity<ContenedorDTO>
+        + obtenerContenedores(token : String) : ResponseEntity<List<ContenedorDTO>>
+        + obtenerContenedoresPorZona(token : String, codigoPostal : String, fecha : LocalDate) : ResponseEntity<List<EstadoContenedorDTO>>
+        + obtenerUsoContenedor(id : String, token : String, fechaInicio : LocalDate, fechaFin : LocalDate) : ResponseEntity<List<EstadoContenedorDTO>>
+        + actualizarEstadoContenedor(id : String, token : String, peticion : ActualizarEstadoDTO) : ResponseEntity<EstadoContenedorDTO>
+        + obtenerPlantas(token : String) : ResponseEntity<List<PlantaDTO>>
+        + obtenerCapacidadPlanta(id : String, token : String, fecha : LocalDate) : ResponseEntity<CapacidadPlantaDTO>
+        + crearAsignacion(token : String, peticion : CrearAsignacionDTO) : ResponseEntity<AsignacionDTO>
+    }
+}
+
+package "com.ecoembes.dto" as pkg_dto {
+    class LoginDTO <<DTO>> {
+        + email : String
+        + contrasena : String
+    }
+    class TokenDTO <<DTO>> {
+        + token : String
+        + email : String
+        + nombre : String
+    }
+    class CrearContenedorDTO <<DTO>> {
+        + id : String
+        + direccion : String
+        + codigoPostal : String
+        + capacidadInicial : Integer
+    }
+    class ContenedorDTO <<DTO>> {
+        + id : String
+        + direccion : String
+        + codigoPostal : String
+        + capacidadInicial : int
+        + envasesActuales : int
+        + nivelLlenado : NivelLlenado
+    }
+    class EstadoContenedorDTO <<DTO>> {
+        + idContenedor : String
+        + direccion : String
+        + codigoPostal : String
+        + fecha : LocalDate
+        + envases : int
+        + nivelLlenado : NivelLlenado
+    }
+    class ActualizarEstadoDTO <<DTO>> {
+        + envases : Integer
+        + nivelLlenado : NivelLlenado
+    }
+    class PlantaDTO <<DTO>> {
+        + id : String
+        + nombre : String
+        + ubicacion : String
+    }
+    class CapacidadPlantaDTO <<DTO>> {
+        + idPlanta : String
+        + nombre : String
+        + fecha : LocalDate
+        + toneladasDisponibles : double
+    }
+    class CrearAsignacionDTO <<DTO>> {
+        + idPlanta : String
+        + idsContenedores : List<String>
+        + fecha : LocalDate
+    }
+    class AsignacionDTO <<DTO>> {
+        + id : String
+        + idPlanta : String
+        + nombrePlanta : String
+        + emailPersonal : String
+        + fecha : LocalDate
+        + idsContenedores : List<String>
+        + totalContenedores : int
+        + totalEnvases : int
+        + toneladasEstimadas : double
+    }
+    class ErrorDTO <<DTO>> {
+        + fechaHora : LocalDateTime
+        + estado : int
+        + error : String
+        + mensaje : String
+        + ruta : String
+    }
+
+    LoginDTO -[hidden]right-> TokenDTO
+    TokenDTO -[hidden]right-> CrearContenedorDTO
+    CrearContenedorDTO -[hidden]right-> ContenedorDTO
+    ContenedorDTO -[hidden]right-> EstadoContenedorDTO
+    EstadoContenedorDTO -[hidden]right-> ActualizarEstadoDTO
+    LoginDTO -[hidden]down-> PlantaDTO
+    PlantaDTO -[hidden]right-> CapacidadPlantaDTO
+    CapacidadPlantaDTO -[hidden]right-> CrearAsignacionDTO
+    CrearAsignacionDTO -[hidden]right-> AsignacionDTO
+    AsignacionDTO -[hidden]right-> ErrorDTO
+}
+
+package "com.ecoembes.servicio" as pkg_servicio {
+    class ServicioAutenticacion <<AppService>> {
+        - repositorioPersonal : RepositorioPersonal
+        - estadoServidor : EstadoServidor
+        + login(peticion : LoginDTO) : TokenDTO
+        + logout(token : String) : void
+        + validarToken(token : String) : PersonalEcoembes
+    }
+
+    class ServicioContenedores <<AppService>> {
+        - repositorioContenedores : RepositorioContenedores
+        - ensamblador : EnsambladorDTO
+        + crearContenedor(peticion : CrearContenedorDTO) : ContenedorDTO
+        + obtenerContenedores() : List<ContenedorDTO>
+        + obtenerContenedoresPorZona(codigoPostal : String, fecha : LocalDate) : List<EstadoContenedorDTO>
+        + obtenerUsoContenedor(id : String, fechaInicio : LocalDate, fechaFin : LocalDate) : List<EstadoContenedorDTO>
+        + actualizarEstadoContenedor(id : String, peticion : ActualizarEstadoDTO) : EstadoContenedorDTO
+        + calcularNivelLlenado(envases : int, capacidad : int) : NivelLlenado
+    }
+
+    class ServicioPlantas <<AppService>> {
+        - repositorioPlantas : RepositorioPlantas
+        - registroPasarelas : RegistroPasarelasPlanta
+        - ensamblador : EnsambladorDTO
+        + obtenerPlantas() : List<PlantaDTO>
+        + obtenerCapacidadPlanta(idPlanta : String, fecha : LocalDate) : CapacidadPlantaDTO
+    }
+
+    class ServicioAsignaciones <<AppService>> {
+        + {static} PESO_ENVASE_KG : double = 0.05
+        + {static} DIAS_MAXIMOS_ANTELACION : int = 10
+        - repositorioContenedores : RepositorioContenedores
+        - repositorioPlantas : RepositorioPlantas
+        - repositorioAsignaciones : RepositorioAsignaciones
+        - registroPasarelas : RegistroPasarelasPlanta
+        - ensamblador : EnsambladorDTO
+        + crearAsignacion(peticion : CrearAsignacionDTO, personal : PersonalEcoembes) : AsignacionDTO
+        + calcularToneladas(totalEnvases : int) : double
+    }
+
+    ServicioAutenticacion -[hidden]right-> ServicioContenedores
+    ServicioAutenticacion -[hidden]down-> ServicioPlantas
+    ServicioPlantas -[hidden]right-> ServicioAsignaciones
+}
+
+package "com.ecoembes.estado" as pkg_estado {
+    class EstadoServidor <<StateManagement>> {
+        - sesionesActivas : Map<String, PersonalEcoembes>
+        + crearSesion(personal : PersonalEcoembes) : String
+        + obtenerPersonalPorToken(token : String) : Optional<PersonalEcoembes>
+        + cerrarSesion(token : String) : boolean
+        + esTokenActivo(token : String) : boolean
+        + getSesionesActivas() : Map<String, PersonalEcoembes>
+    }
+}
+
+package "com.ecoembes.ensamblador" as pkg_ensamblador {
+    class EnsambladorDTO <<Assembler>> {
+        + aContenedorDTO(contenedor : Contenedor) : ContenedorDTO
+        + aEstadoContenedorDTO(contenedor : Contenedor, registro : RegistroEstadoContenedor) : EstadoContenedorDTO
+        + aPlantaDTO(planta : PlantaReciclaje) : PlantaDTO
+        + aCapacidadPlantaDTO(planta : PlantaReciclaje, fecha : LocalDate, toneladasDisponibles : double) : CapacidadPlantaDTO
+        + aAsignacionDTO(asignacion : Asignacion) : AsignacionDTO
+    }
+}
+
+package "com.ecoembes.externo" as pkg_externo {
+    interface PasarelaPlanta <<Gateway>> {
+        + obtenerIdPlanta() : String
+        + obtenerNombrePlanta() : String
+        + consultarCapacidad(fecha : LocalDate) : double
+        + reducirCapacidad(fecha : LocalDate, toneladas : double) : void
+        + notificarAsignacion(fecha : LocalDate, totalContenedores : int, totalEnvases : int, toneladasEstimadas : double) : void
+    }
+
+    class PasarelaPlasSB {
+        - repositorioPlantas : RepositorioPlantas
+        + obtenerIdPlanta() : String
+        + obtenerNombrePlanta() : String
+        + consultarCapacidad(fecha : LocalDate) : double
+        + reducirCapacidad(fecha : LocalDate, toneladas : double) : void
+        + notificarAsignacion(fecha : LocalDate, totalContenedores : int, totalEnvases : int, toneladasEstimadas : double) : void
+    }
+
+    class PasarelaContSocket {
+        - repositorioPlantas : RepositorioPlantas
+        + obtenerIdPlanta() : String
+        + obtenerNombrePlanta() : String
+        + consultarCapacidad(fecha : LocalDate) : double
+        + reducirCapacidad(fecha : LocalDate, toneladas : double) : void
+        + notificarAsignacion(fecha : LocalDate, totalContenedores : int, totalEnvases : int, toneladasEstimadas : double) : void
+    }
+
+    class RegistroPasarelasPlanta {
+        - pasarelasPorIdPlanta : Map<String, PasarelaPlanta>
+        + obtenerPasarela(idPlanta : String) : PasarelaPlanta
+    }
+
+    PasarelaPlasSB -[hidden]down-> PasarelaContSocket
+}
+
+package "com.ecoembes.repositorio" as pkg_repo {
+    interface RepositorioPersonal <<Repository>> {
+        + buscarPorEmail(email : String) : Optional<PersonalEcoembes>
+        + guardar(personal : PersonalEcoembes) : void
+        + buscarTodos() : List<PersonalEcoembes>
+    }
+    class RepositorioPersonalMemoria {
+        - personalPorEmail : Map<String, PersonalEcoembes>
+    }
+    interface RepositorioContenedores <<Repository>> {
+        + buscarPorId(id : String) : Optional<Contenedor>
+        + existePorId(id : String) : boolean
+        + guardar(contenedor : Contenedor) : Contenedor
+        + buscarTodos() : List<Contenedor>
+        + buscarPorCodigoPostal(codigoPostal : String) : List<Contenedor>
+    }
+    class RepositorioContenedoresMemoria {
+        - contenedoresPorId : Map<String, Contenedor>
+    }
+    interface RepositorioPlantas <<Repository>> {
+        + buscarPorId(id : String) : Optional<PlantaReciclaje>
+        + guardar(planta : PlantaReciclaje) : PlantaReciclaje
+        + buscarTodas() : List<PlantaReciclaje>
+    }
+    class RepositorioPlantasMemoria {
+        - plantasPorId : Map<String, PlantaReciclaje>
+    }
+    interface RepositorioAsignaciones <<Repository>> {
+        + guardar(asignacion : Asignacion) : Asignacion
+        + buscarTodas() : List<Asignacion>
+        + estaContenedorAsignadoEnFecha(idContenedor : String, fecha : LocalDate) : boolean
+    }
+    class RepositorioAsignacionesMemoria {
+        - asignaciones : List<Asignacion>
+    }
+
+    RepositorioPersonalMemoria ..|> RepositorioPersonal
+    RepositorioContenedoresMemoria ..|> RepositorioContenedores
+    RepositorioPlantasMemoria ..|> RepositorioPlantas
+    RepositorioAsignacionesMemoria ..|> RepositorioAsignaciones
+
+    RepositorioPersonal -[hidden]right-> RepositorioContenedores
+    RepositorioPersonal -[hidden]down-> RepositorioPlantas
+    RepositorioPlantas -[hidden]right-> RepositorioAsignaciones
+}
+
+package "com.ecoembes.dominio" as pkg_dominio {
+    enum NivelLlenado {
+        VERDE
+        NARANJA
+        ROJO
+    }
+
+    class Contenedor {
+        - id : String
+        - direccion : String
+        - codigoPostal : String
+        - capacidadInicial : int
+        - envasesActuales : int
+        - nivelLlenado : NivelLlenado
+        - historial : List<RegistroEstadoContenedor>
+        + registrarEstado(fecha : LocalDate, envases : int, nivel : NivelLlenado) : RegistroEstadoContenedor
+        + agregarRegistroHistorico(registro : RegistroEstadoContenedor) : void
+        + obtenerEstadoEnFecha(fecha : LocalDate) : Optional<RegistroEstadoContenedor>
+        + obtenerHistorialEntreFechas(fechaInicio : LocalDate, fechaFin : LocalDate) : List<RegistroEstadoContenedor>
+    }
+
+    class RegistroEstadoContenedor {
+        - fecha : LocalDate
+        - envases : int
+        - nivelLlenado : NivelLlenado
+    }
+
+    class PlantaReciclaje {
+        - id : String
+        - nombre : String
+        - ubicacion : String
+        - capacidadesDiarias : Map<LocalDate, CapacidadDiariaPlanta>
+        + obtenerCapacidadEnFecha(fecha : LocalDate) : Optional<CapacidadDiariaPlanta>
+        + establecerCapacidadEnFecha(fecha : LocalDate, toneladasMaximas : double, toneladasDisponibles : double) : void
+    }
+
+    class CapacidadDiariaPlanta {
+        - fecha : LocalDate
+        - toneladasMaximas : double
+        - toneladasDisponibles : double
+        + reducirToneladasDisponibles(toneladas : double) : void
+    }
+
+    class PersonalEcoembes {
+        - id : String
+        - nombre : String
+        - email : String
+        - contrasena : String
+    }
+
+    class Asignacion {
+        - id : String
+        - planta : PlantaReciclaje
+        - personal : PersonalEcoembes
+        - contenedores : List<Contenedor>
+        - fecha : LocalDate
+        - totalEnvases : int
+        - toneladasEstimadas : double
+    }
+}
+
+pkg_fachada -[hidden]down-> pkg_dto
+pkg_dto -[hidden]down-> pkg_servicio
+pkg_servicio -[hidden]down-> pkg_estado
+pkg_estado -[hidden]down-> pkg_ensamblador
+pkg_ensamblador -[hidden]down-> pkg_externo
+pkg_externo -[hidden]down-> pkg_repo
+pkg_repo -[hidden]down-> pkg_dominio
+
+EcoembesController --> ServicioAutenticacion
+EcoembesController --> ServicioContenedores
+EcoembesController --> ServicioPlantas
+EcoembesController --> ServicioAsignaciones
+EcoembesController ..> pkg_dto
+
+ServicioAutenticacion --> EstadoServidor
+ServicioAutenticacion --> RepositorioPersonal
+EstadoServidor "1" o-- "0..*" PersonalEcoembes : sesionesActivas
+
+ServicioContenedores --> RepositorioContenedores
+ServicioContenedores --> EnsambladorDTO
+
+ServicioPlantas --> RepositorioPlantas
+ServicioPlantas --> RegistroPasarelasPlanta
+ServicioPlantas --> EnsambladorDTO
+
+ServicioAsignaciones --> RepositorioContenedores
+ServicioAsignaciones --> RepositorioPlantas
+ServicioAsignaciones --> RepositorioAsignaciones
+ServicioAsignaciones --> RegistroPasarelasPlanta
+ServicioAsignaciones --> EnsambladorDTO
+
+RegistroPasarelasPlanta "1" o-- "1..*" PasarelaPlanta
+PasarelaPlasSB ..|> PasarelaPlanta
+PasarelaContSocket ..|> PasarelaPlanta
+PasarelaPlasSB --> RepositorioPlantas
+PasarelaContSocket --> RepositorioPlantas
+
+Contenedor "1" *-- "1..*" RegistroEstadoContenedor : historial
+Contenedor "0..*" --> "1" NivelLlenado : nivelLlenado
+RegistroEstadoContenedor "0..*" --> "1" NivelLlenado : nivelLlenado
+
+PlantaReciclaje "1" *-- "0..*" CapacidadDiariaPlanta : capacidadesDiarias
+
+Asignacion "0..*" --> "1" PlantaReciclaje : planta
+Asignacion "0..*" --> "1" PersonalEcoembes : personal
+Asignacion "0..*" --> "1..*" Contenedor : contenedores
+
+@enduml
