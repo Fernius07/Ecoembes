@@ -49,11 +49,59 @@ com.ecoembes
 
 ---
 
-## 4. Instalación, Compilación y Ejecución
+## 4. Instalación, Configuración y Ejecución
 
-### Opción A: Ejecución desde línea de comandos (Terminal)
+A continuación se detallan las dos formas de obtener, configurar y ejecutar el proyecto, tanto desde **Eclipse IDE** (recomendado para compañeros del equipo y evaluación del profesor) como desde la **terminal**.
 
-1. Clonar el repositorio o descomprimir el archivo de entrega y situarse en el directorio raíz del proyecto:
+### Opción A: Descarga, conexión con GitHub y configuración en Eclipse IDE
+
+#### Paso 1. Obtener el proyecto (desde GitHub o archivo ZIP)
+
+Puedes obtener el código fuente de cualquiera de estas dos maneras:
+
+- **Opción 1 — Conectar y clonar directamente desde GitHub en Eclipse (recomendado para compañeros):**
+  1. En Eclipse, abre la perspectiva de Git desde **Window → Perspective → Open Perspective → Other... → Git** (o ve directamente a **File → Import... → Git → Projects from Git (with smart import)**).
+  2. Selecciona **Clone URI** y pulsa **Next**.
+  3. En el campo **URI**, introduce la dirección del repositorio:
+     ```text
+     https://github.com/Fernius07/Ecoembes.git
+     ```
+     *(Los campos Host y Repository path se rellenarán automáticamente; si vas a hacer push como colaborador, introduce tu usuario de GitHub y tu Personal Access Token en Authentication).*
+  4. Pulsa **Next**, asegúrate de que la rama **`main`** está marcada, elige la carpeta local de destino donde se guardará el repositorio y finaliza el clonado (**Cancel** si te pide importar como proyecto general, ya que en el Paso 2 lo importaremos como proyecto Gradle para que configure todas las dependencias).
+
+- **Opción 2 — Clonar por consola o descomprimir el ZIP de entrega:**
+  - Si prefieres usar Git por terminal:
+    ```bash
+    git clone https://github.com/Fernius07/Ecoembes.git
+    ```
+  - Si dispones del archivo `.zip` de la entrega, descomprímelo en cualquier carpeta local de tu equipo.
+
+#### Paso 2. Importar y configurar como Proyecto Gradle en Eclipse
+
+1. En Eclipse, ve a **File → Import... → Gradle → Existing Gradle Project** y pulsa **Next** (si aparece la pantalla de bienvenida de Buildship, pulsa **Next** de nuevo).
+2. En **Project root directory**, haz clic en **Browse...** y selecciona la carpeta raíz del proyecto que acabas de clonar o descomprimir (`Ecoembes` o `ecoembes-prototipo1`). Pulsa **Next**.
+3. En la ventana **Import Options**:
+   - Marca la casilla **Override workspace settings**.
+   - Asegúrate de que está seleccionado **Gradle wrapper** (para usar la versión `8.10.2` incluida en el proyecto).
+   - En **Java home** (dentro de *Advanced Options*), selecciona la ruta de un **JDK 17 o JDK 21 LTS** instalado en tu equipo (por ejemplo, `C:\Program Files\Eclipse Adoptium\jdk-21...`). *Nota: Esto evita problemas si tu instalación de Eclipse trae por defecto un JRE interno experimental superior (como Java 27) aún no soportado por Gradle 8.*
+4. Pulsa **Finish** y espera unos segundos a que Eclipse descargue las dependencias de Spring Boot y sincronice el proyecto.
+5. *(Opcional)* Si tras importar deseas forzar la actualización de dependencias en cualquier momento, haz clic derecho sobre el proyecto en el *Package Explorer* y selecciona **Gradle → Refresh Gradle Project**.
+
+#### Paso 3. Ejecutar el servidor y los tests desde Eclipse
+
+- **Arrancar el Servidor Ecoembes:**
+  1. En el *Package Explorer*, despliega `src/main/java` → paquete `com.ecoembes`.
+  2. Haz clic derecho sobre [`EcoembesApplication.java`](src/main/java/com/ecoembes/EcoembesApplication.java) y selecciona **Run As → Java Application** (o **Spring Boot App**).
+  3. En la pestaña **Console** de Eclipse verás el arranque de Spring Boot en el puerto `8080` y el mensaje `Datos iniciales del Servidor Ecoembes cargados en memoria.`
+- **Ejecutar las pruebas unitarias (JUnit 5):**
+  1. Haz clic derecho sobre la carpeta `src/test/java` (o sobre el proyecto).
+  2. Selecciona **Run As → JUnit Test** para verificar que todos los casos de prueba pasan en verde.
+
+---
+
+### Opción B: Ejecución desde línea de comandos (Terminal)
+
+1. Clonar el repositorio (o situarse en la carpeta descomprimida del proyecto):
    ```bash
    git clone https://github.com/Fernius07/Ecoembes.git
    cd Ecoembes
@@ -74,14 +122,6 @@ com.ecoembes
    # En Linux / macOS:
    ./gradlew bootRun
    ```
-
-### Opción B: Importación y ejecución desde Eclipse IDE
-
-1. En Eclipse, seleccionar **File → Import... → Gradle → Existing Gradle Project** y pulsar **Next**.
-2. En **Project root directory**, seleccionar la carpeta raíz del proyecto.
-3. En las opciones de importación (*Import Options*), mantener seleccionada la opción **Gradle wrapper** (y asegurarse de tener configurado un JDK 17 o 21 en Eclipse) y pulsar **Finish**.
-4. Para arrancar el servidor, localizar la clase `src/main/java/com/ecoembes/EcoembesApplication.java`, hacer clic derecho y seleccionar **Run As → Java Application** (o **Spring Boot App**).
-5. Para ejecutar las pruebas unitarias, hacer clic derecho sobre `src/test/java` y seleccionar **Run As → JUnit Test**.
 
 ---
 
