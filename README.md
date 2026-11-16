@@ -111,7 +111,7 @@ Una vez iniciado el servidor, la aplicación escucha en el puerto `8080`:
 
 ### 5.1. Diagrama de Clases UML
 
-![Diagrama de Clases del Servidor Ecoembes (Prototipo 1)](docs/diagramas/Diagrama%20de%20Clases%20Ecoembes.png)
+![Diagrama de Clases del Servidor Ecoembes (Prototipo 1)](docs/diagramas/com.png)
 
 ### 5.2. Diagramas de Secuencia UML
 
