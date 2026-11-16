@@ -20,7 +20,7 @@
 | `obtenerContenedores` | `GET` | `/api/contenedores` | `token` | `List<ContenedorDTO>` | `200, 401` |
 | `obtenerContenedoresPorZona` | `GET` | `/api/contenedores` | `token, codigoPostal, fecha` | `List<EstadoContenedorDTO>` | `200, 400, 401` |
 | `obtenerUsoContenedor` | `GET` | `/api/contenedores/{id}/uso` | `id, token, fechaInicio, fechaFin` | `List<EstadoContenedorDTO>` | `200, 400, 401, 404` |
-| `actualizarEstadoContenedor` | `PUT` | `/api/contenedores/{id}/estado` | `id, token, ActualizarEstadoDTO (envases, nivelLlenado)` | `EstadoContenedorDTO` | `200, 400, 401, 404` |
+| `actualizarEstadoContenedor` | `PUT` | `/api/contenedores/{id}/estado` | `id, token, ActualizarEstadoDTO (toneladas, nivelLlenado)` | `EstadoContenedorDTO` | `200, 400, 401, 404` |
 | `obtenerPlantas` | `GET` | `/api/plantas` | `token` | `List<PlantaDTO>` | `200, 401` |
 | `obtenerCapacidadPlanta` | `GET` | `/api/plantas/{id}/capacidad` | `id, token, fecha` | `CapacidadPlantaDTO` | `200, 400, 401, 404` |
 | `crearAsignacion` | `POST` | `/api/asignaciones` | `token, CrearAsignacionDTO (idPlanta, idsContenedores, fecha)` | `AsignacionDTO` | `201, 400, 401, 404` |

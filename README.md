@@ -6,7 +6,7 @@ Sistema distribuido para la gestión inteligente del reciclaje de envases desarr
 
 ## 1. Descripción del Proyecto y Alcance del Prototipo 1
 
-El sistema **Ecoembes** da soporte a la gestión de contenedores de recogida selectiva equipados con sensores **RecycloBin UltraEye** (que transmiten diariamente el número estimado de envases y el nivel de llenado) y a la asignación de dichos contenedores a plantas de reciclaje externas (**PlasSB Ltd.** y **ContSocket Ltd.**), las cuales publican su capacidad disponible en toneladas con 10 días de antelación.
+El sistema **Ecoembes** da soporte a la gestión de contenedores de recogida selectiva equipados con sensores **RecycloBin UltraEye** (que transmiten diariamente las toneladas estimadas y el nivel de llenado) y a la asignación de dichos contenedores a plantas de reciclaje externas (**PlasSB Ltd.** y **ContSocket Ltd.**), las cuales publican su capacidad disponible en toneladas con 10 días de antelación.
 
 En este **Prototipo 1** se implementa la primera versión funcional del **Servidor Ecoembes**:
 - **Almacenamiento en memoria:** toda la información del dominio (personal, contenedores, históricos diarios, capacidades de plantas y asignaciones) se gestiona en memoria sin base de datos, precargando un conjunto de datos de prueba al iniciar la aplicación (`InicializadorDatos`).
@@ -34,7 +34,7 @@ com.ecoembes
 ```
 
 - **Patrón Fachada (`EcoembesController`):** único punto de entrada REST del servidor que centraliza las operaciones del API y delega en la capa de servicios. Los nombres de sus métodos coinciden exactamente con los del diseño del API y los diagramas UML de clases y secuencia.
-- **Patrón Servicio de Aplicación (`com.ecoembes.servicio`):** encapsula toda la lógica de negocio, validaciones, cálculo de niveles de llenado y conversión de envases a toneladas.
+- **Patrón Servicio de Aplicación (`com.ecoembes.servicio`):** encapsula toda la lógica de negocio, validaciones, cálculo de niveles de llenado y vaciado de contenedores según la fecha de asignación.
 - **Patrón DTO y Ensamblador (`com.ecoembes.dto`, `EnsambladorDTO`):** desacopla el modelo de dominio interno de los contratos JSON expuestos a los clientes.
 - **Patrón Gestión de Estado (`EstadoServidor`):** mantiene en memoria un mapa concurrente (`ConcurrentHashMap<String, PersonalEcoembes>`) con los tokens activos (generados a partir de la marca de tiempo en milisegundos del inicio de sesión) y el empleado autenticado.
 - **Patrón Pasarela (`PasarelaPlanta`, `RegistroPasarelasPlanta`):** aísla el acceso a las plantas de reciclaje externas para garantizar la extensibilidad del sistema.
@@ -138,7 +138,7 @@ Una vez iniciado el servidor, la aplicación escucha en el puerto `8080`:
 | `obtenerContenedores` | `GET` | `/api/contenedores` | `token` | `List<ContenedorDTO>` | `200, 401` |
 | `obtenerContenedoresPorZona` | `GET` | `/api/contenedores` | `token, codigoPostal, fecha` | `List<EstadoContenedorDTO>` | `200, 400, 401` |
 | `obtenerUsoContenedor` | `GET` | `/api/contenedores/{id}/uso` | `id, token, fechaInicio, fechaFin` | `List<EstadoContenedorDTO>` | `200, 400, 401, 404` |
-| `actualizarEstadoContenedor` | `PUT` | `/api/contenedores/{id}/estado` | `id, token, ActualizarEstadoDTO (envases, nivelLlenado)` | `EstadoContenedorDTO` | `200, 400, 401, 404` |
+| `actualizarEstadoContenedor` | `PUT` | `/api/contenedores/{id}/estado` | `id, token, ActualizarEstadoDTO (toneladas, nivelLlenado)` | `EstadoContenedorDTO` | `200, 400, 401, 404` |
 | `obtenerPlantas` | `GET` | `/api/plantas` | `token` | `List<PlantaDTO>` | `200, 401` |
 | `obtenerCapacidadPlanta` | `GET` | `/api/plantas/{id}/capacidad` | `id, token, fecha` | `CapacidadPlantaDTO` | `200, 400, 401, 404` |
 | `crearAsignacion` | `POST` | `/api/asignaciones` | `token, CrearAsignacionDTO (idPlanta, idsContenedores, fecha)` | `AsignacionDTO` | `201, 400, 401, 404` |
@@ -162,27 +162,27 @@ Al arrancar el servidor se cargan automáticamente en memoria los siguientes dat
 
 ### 6.2. Contenedores en Bilbao (con histórico de los últimos 8 días)
 
-| ID | Dirección | Código Postal | Capacidad Inicial | Envases Actuales | Nivel de Llenado |
+| ID | Dirección | Código Postal | Capacidad Inicial (t) | Toneladas Actuales (t) | Nivel de Llenado |
 |---|---|---|---|---|---|
-| `CONT-001` | Plaza Circular 1, Abando | `48001` | `2000` | `650` | `VERDE` |
-| `CONT-002` | Calle Buenos Aires 12, Abando | `48001` | `2000` | `1450` | `NARANJA` |
-| `CONT-003` | Alameda Mazarredo 24, Abando | `48001` | `2000` | `1920` | `ROJO` |
-| `CONT-004` | Calle Hurtado de Amézaga 18 | `48002` | `2500` | `800` | `VERDE` |
-| `CONT-005` | Calle Autonomía 10, Indautxu | `48002` | `2500` | `1850` | `NARANJA` |
-| `CONT-006` | Calle San Francisco 32, Bilbao La Vieja | `48003` | `1800` | `520` | `VERDE` |
-| `CONT-007` | Plaza Corazón de María 5 | `48003` | `1800` | `1710` | `ROJO` |
-| `CONT-008` | Calle Santutxu 40, Santutxu | `48004` | `2200` | `900` | `VERDE` |
-| `CONT-009` | Avenida Zumalacárregui 65, Begoña | `48004` | `2200` | `1650` | `NARANJA` |
+| `CONT-001` | Plaza Circular 1, Abando | `48001` | `0.10` | `0.0325` | `VERDE` |
+| `CONT-002` | Calle Buenos Aires 12, Abando | `48001` | `0.10` | `0.0725` | `NARANJA` |
+| `CONT-003` | Alameda Mazarredo 24, Abando | `48001` | `0.10` | `0.0960` | `ROJO` |
+| `CONT-004` | Calle Hurtado de Amézaga 18 | `48002` | `0.125` | `0.0400` | `VERDE` |
+| `CONT-005` | Calle Autonomía 10, Indautxu | `48002` | `0.125` | `0.0925` | `NARANJA` |
+| `CONT-006` | Calle San Francisco 32, Bilbao La Vieja | `48003` | `0.09` | `0.0260` | `VERDE` |
+| `CONT-007` | Plaza Corazón de María 5 | `48003` | `0.09` | `0.0855` | `ROJO` |
+| `CONT-008` | Calle Santutxu 40, Santutxu | `48004` | `0.11` | `0.0450` | `VERDE` |
+| `CONT-009` | Avenida Zumalacárregui 65, Begoña | `48004` | `0.11` | `0.0825` | `NARANJA` |
 
-- **Umbrales de llenado:** `VERDE` (`< 60 %`), `NARANJA` (`60 % – 90 %`), `ROJO` (`> 90 %`).
-- **Conversión de envases a toneladas:** peso medio fijo de `0,05 kg` (50 g) por envase (`toneladasEstimadas = totalEnvases * 0,05 / 1000`).
+- **Umbrales de llenado (`NivelLlenado`):** `VERDE` (`[0.0 %, 60.0 %)`), `NARANJA` (`[60.0 %, 90.0 %]`), `ROJO` (`(90.0 %, 100.0 %]`).
+- **Asignación en toneladas y vaciado según fecha:** `toneladasEstimadas` se calcula sumando directamente `toneladasActuales` de los contenedores asignados. Si la asignación corresponde al día actual (`LocalDate.now()`), los contenedores se vacían automáticamente (`0.0` t y nivel `VERDE`); si es para una fecha futura, conservan su carga actual hoy.
 
 ### 6.3. Plantas de Reciclaje (horizonte de 10 días desde la fecha actual)
 
 | ID Planta | Nombre | Ubicación | Capacidad Diaria Habitual | Escenario de Capacidad Reducida (para pruebas de error `400`) |
 |---|---|---|---|---|
-| `PLASSB` | **PlasSB Ltd.** | Polígono Industrial Asua-Erandio, Bizkaia | `1,50 t` | Día `hoy + 1`: `0,02 t` (máx. 400 envases) |
-| `CONTSOCKET` | **ContSocket Ltd.** | Parque Tecnológico de Zamudio, Bizkaia | `2,00 t` | Día `hoy`: `0,04 t` (máx. 800 envases) |
+| `PLASSB` | **PlasSB Ltd.** | Polígono Industrial Asua-Erandio, Bizkaia | `1,50 t` | Día `hoy + 1`: `0,02 t` |
+| `CONTSOCKET` | **ContSocket Ltd.** | Parque Tecnológico de Zamudio, Bizkaia | `2,00 t` | Día `hoy`: `0,04 t` |
 
 ---
 
@@ -192,5 +192,5 @@ Al arrancar el servidor se cargan automáticamente en memoria los siguientes dat
 - [`docs/diseno_api.md`](docs/diseno_api.md): Especificación detallada del API REST y patrones de diseño.
 - [`docs/decisiones.md`](docs/decisiones.md): Decisiones de diseño y reglas de negocio adoptadas.
 - [`docs/validacion.md`](docs/validacion.md): Tabla de pruebas de validación en Swagger UI y capturas en `docs/capturas/`.
-- `docs/diagramas/`: Diagramas UML de clases y de secuencia en formato PNG, PlantUML (`.puml`) y XMI para Visual Paradigm (`.xmi`).
+- [`docs/diagramas/project.xml`](docs/diagramas/project.xml): Diagrama UML del proyecto en formato XML para Visual Paradigm.
 - [`docs/Reflexion_IA.md`](docs/Reflexion_IA.md): Documento de reflexión sobre el uso de herramientas de IA Generativa.

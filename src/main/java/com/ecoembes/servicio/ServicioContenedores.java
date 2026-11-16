@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -47,11 +46,8 @@ public class ServicioContenedores {
                 idNormalizado,
                 peticion.direccion().trim(),
                 peticion.codigoPostal().trim(),
-                peticion.capacidadInicial(),
-                0,
-                NivelLlenado.VERDE
+                peticion.capacidadInicial()
         );
-        contenedor.registrarEstado(LocalDate.now(), 0, NivelLlenado.VERDE);
         repositorioContenedores.guardar(contenedor);
         return ensamblador.aContenedorDTO(contenedor);
     }
@@ -69,14 +65,8 @@ public class ServicioContenedores {
         List<Contenedor> contenedores = repositorioContenedores.buscarPorCodigoPostal(codigoPostal);
         List<EstadoContenedorDTO> resultado = new ArrayList<>();
         for (Contenedor contenedor : contenedores) {
-            Optional<RegistroEstadoContenedor> registroOpt = contenedor.obtenerEstadoEnFecha(fecha);
-            if (registroOpt.isPresent()) {
-                resultado.add(ensamblador.aEstadoContenedorDTO(contenedor, registroOpt.get()));
-            } else if (fecha.equals(LocalDate.now())) {
-                RegistroEstadoContenedor actual = new RegistroEstadoContenedor(
-                        fecha, contenedor.getEnvasesActuales(), contenedor.getNivelLlenado());
-                resultado.add(ensamblador.aEstadoContenedorDTO(contenedor, actual));
-            }
+            contenedor.obtenerEstadoEnFecha(fecha)
+                    .ifPresent(registro -> resultado.add(ensamblador.aEstadoContenedorDTO(contenedor, registro)));
         }
         return resultado;
     }
@@ -98,32 +88,26 @@ public class ServicioContenedores {
     }
 
     public EstadoContenedorDTO actualizarEstadoContenedor(String id, ActualizarEstadoDTO peticion) {
-        if (peticion == null || peticion.envases() == null || peticion.envases() < 0) {
-            throw new ExcepcionPeticionInvalida("El número de envases debe ser mayor o igual a cero");
+        if (peticion == null || peticion.toneladas() == null || peticion.toneladas() < 0.0) {
+            throw new ExcepcionPeticionInvalida("Las toneladas deben ser mayores o iguales a cero");
         }
         Contenedor contenedor = repositorioContenedores.buscarPorId(id)
                 .orElseThrow(() -> new ExcepcionNoEncontrado("No existe el contenedor con identificador: " + id));
 
         NivelLlenado nivel = peticion.nivelLlenado() != null
                 ? peticion.nivelLlenado()
-                : calcularNivelLlenado(peticion.envases(), contenedor.getCapacidadInicial());
+                : calcularNivelLlenado(peticion.toneladas(), contenedor.getCapacidadInicial());
 
-        RegistroEstadoContenedor registro = contenedor.registrarEstado(LocalDate.now(), peticion.envases(), nivel);
+        RegistroEstadoContenedor registro = contenedor.registrarEstado(LocalDate.now(), peticion.toneladas(), nivel);
         repositorioContenedores.guardar(contenedor);
         return ensamblador.aEstadoContenedorDTO(contenedor, registro);
     }
 
-    public NivelLlenado calcularNivelLlenado(int envases, int capacidad) {
+    public NivelLlenado calcularNivelLlenado(double toneladas, double capacidad) {
         if (capacidad <= 0) {
             return NivelLlenado.ROJO;
         }
-        double porcentaje = (envases * 100.0) / capacidad;
-        if (porcentaje < 60.0) {
-            return NivelLlenado.VERDE;
-        } else if (porcentaje <= 90.0) {
-            return NivelLlenado.NARANJA;
-        } else {
-            return NivelLlenado.ROJO;
-        }
+        double porcentaje = (toneladas * 100.0) / capacidad;
+        return NivelLlenado.calcularSegunPorcentaje(porcentaje);
     }
 }

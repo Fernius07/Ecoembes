@@ -55,12 +55,13 @@ class ServicioAsignacionesTest {
         personal = new PersonalEcoembes("EMP-01", "Ian Anaya Abascal", "ian.anaya@ecoembes.com", "ecoembes123");
         hoy = LocalDate.now();
 
-        repositorioContenedores.guardar(new Contenedor("CONT-001", "Plaza Circular 1", "48001", 2000, 1000, NivelLlenado.VERDE));
-        repositorioContenedores.guardar(new Contenedor("CONT-002", "Calle Buenos Aires 12", "48001", 2000, 1500, NivelLlenado.NARANJA));
+        repositorioContenedores.guardar(new Contenedor("CONT-001", "Plaza Circular 1", "48001", 0.10, 0.05, NivelLlenado.VERDE));
+        repositorioContenedores.guardar(new Contenedor("CONT-002", "Calle Buenos Aires 12", "48001", 0.10, 0.075, NivelLlenado.NARANJA));
 
         PlantaReciclaje plasSb = new PlantaReciclaje("PLASSB", "PlasSB Ltd.", "Erandio");
         plasSb.establecerCapacidadEnFecha(hoy, 1.00, 1.00);
         plasSb.establecerCapacidadEnFecha(hoy.plusDays(1), 0.05, 0.05);
+        plasSb.establecerCapacidadEnFecha(hoy.plusDays(2), 1.00, 1.00);
         repositorioPlantas.guardar(plasSb);
     }
 
@@ -75,11 +76,34 @@ class ServicioAsignacionesTest {
         assertEquals("PLASSB", resultado.idPlanta());
         assertEquals("ian.anaya@ecoembes.com", resultado.emailPersonal());
         assertEquals(2, resultado.totalContenedores());
-        assertEquals(2500, resultado.totalEnvases());
         assertEquals(0.125, resultado.toneladasEstimadas(), 0.0001);
 
         double capacidadRestante = registroPasarelas.obtenerPasarela("PLASSB").consultarCapacidad(hoy);
         assertEquals(0.875, capacidadRestante, 0.0001);
+
+        Contenedor cont1 = repositorioContenedores.buscarPorId("CONT-001").orElseThrow();
+        Contenedor cont2 = repositorioContenedores.buscarPorId("CONT-002").orElseThrow();
+        assertEquals(0.0, cont1.getToneladasActuales(), 0.0001);
+        assertEquals(NivelLlenado.VERDE, cont1.getNivelLlenado());
+        assertEquals(0.0, cont2.getToneladasActuales(), 0.0001);
+        assertEquals(NivelLlenado.VERDE, cont2.getNivelLlenado());
+    }
+
+    @Test
+    void testCrearAsignacionFechaFuturaNoVaciaContenedoresHoy() {
+        CrearAsignacionDTO peticion = new CrearAsignacionDTO(
+                "PLASSB", List.of("CONT-001", "CONT-002"), hoy.plusDays(2));
+
+        AsignacionDTO resultado = servicioAsignaciones.crearAsignacion(peticion, personal);
+
+        assertEquals(0.125, resultado.toneladasEstimadas(), 0.0001);
+
+        Contenedor cont1 = repositorioContenedores.buscarPorId("CONT-001").orElseThrow();
+        Contenedor cont2 = repositorioContenedores.buscarPorId("CONT-002").orElseThrow();
+        assertEquals(0.05, cont1.getToneladasActuales(), 0.0001);
+        assertEquals(NivelLlenado.VERDE, cont1.getNivelLlenado());
+        assertEquals(0.075, cont2.getToneladasActuales(), 0.0001);
+        assertEquals(NivelLlenado.NARANJA, cont2.getNivelLlenado());
     }
 
     @Test

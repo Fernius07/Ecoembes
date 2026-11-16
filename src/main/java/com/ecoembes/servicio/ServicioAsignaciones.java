@@ -27,7 +27,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Service
 public class ServicioAsignaciones {
 
-    public static final double PESO_ENVASE_KG = 0.05;
     public static final int DIAS_MAXIMOS_ANTELACION = 10;
 
     private final RepositorioContenedores repositorioContenedores;
@@ -90,20 +89,27 @@ public class ServicioAsignaciones {
             }
         }
 
-        int totalEnvases = contenedoresSeleccionados.stream()
-                .mapToInt(Contenedor::getEnvasesActuales)
+        double sumaToneladas = contenedoresSeleccionados.stream()
+                .mapToDouble(Contenedor::getToneladasActuales)
                 .sum();
-        double toneladasEstimadas = calcularToneladas(totalEnvases);
+        double toneladasEstimadas = Math.round(sumaToneladas * 100000.0) / 100000.0;
 
         double toneladasDisponibles = pasarela.consultarCapacidad(peticion.fecha());
         if (toneladasEstimadas > toneladasDisponibles) {
             throw new ExcepcionPeticionInvalida(String.format(Locale.US,
-                    "Capacidad disponible insuficiente en la planta %s para el día %s: se necesitan %.4f t (%d envases) y solo hay %.4f t disponibles",
-                    planta.getNombre(), peticion.fecha(), toneladasEstimadas, totalEnvases, toneladasDisponibles));
+                    "Capacidad disponible insuficiente en la planta %s para el día %s: se necesitan %.4f t y solo hay %.4f t disponibles",
+                    planta.getNombre(), peticion.fecha(), toneladasEstimadas, toneladasDisponibles));
         }
 
         pasarela.reducirCapacidad(peticion.fecha(), toneladasEstimadas);
-        pasarela.notificarAsignacion(peticion.fecha(), contenedoresSeleccionados.size(), totalEnvases, toneladasEstimadas);
+        pasarela.notificarAsignacion(peticion.fecha(), contenedoresSeleccionados.size(), toneladasEstimadas);
+
+        if (peticion.fecha().equals(hoy)) {
+            for (Contenedor contenedor : contenedoresSeleccionados) {
+                contenedor.vaciar(hoy);
+                repositorioContenedores.guardar(contenedor);
+            }
+        }
 
         String idAsignacion = String.format("ASIG-%03d", secuencia.getAndIncrement());
         Asignacion asignacion = new Asignacion(
@@ -112,15 +118,9 @@ public class ServicioAsignaciones {
                 personal,
                 contenedoresSeleccionados,
                 peticion.fecha(),
-                totalEnvases,
                 toneladasEstimadas
         );
         repositorioAsignaciones.guardar(asignacion);
         return ensamblador.aAsignacionDTO(asignacion);
-    }
-
-    public double calcularToneladas(int totalEnvases) {
-        double toneladas = (totalEnvases * PESO_ENVASE_KG) / 1000.0;
-        return Math.round(toneladas * 100000.0) / 100000.0;
     }
 }

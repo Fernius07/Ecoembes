@@ -19,9 +19,9 @@ public record CrearContenedorDTO(
         @NotBlank(message = "El código postal es obligatorio")
         String codigoPostal,
 
-        @Schema(description = "Capacidad máxima en número de envases", example = "2500")
+        @Schema(description = "Capacidad máxima en toneladas", example = "0.125")
         @NotNull(message = "La capacidad inicial es obligatoria")
         @Positive(message = "La capacidad inicial debe ser mayor que cero")
-        Integer capacidadInicial
+        Double capacidadInicial
 ) {
 }

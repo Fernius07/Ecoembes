@@ -11,18 +11,16 @@ public class Asignacion {
     private PersonalEcoembes personal;
     private List<Contenedor> contenedores;
     private LocalDate fecha;
-    private int totalEnvases;
     private double toneladasEstimadas;
 
     public Asignacion(String id, PlantaReciclaje planta, PersonalEcoembes personal,
                       List<Contenedor> contenedores, LocalDate fecha,
-                      int totalEnvases, double toneladasEstimadas) {
+                      double toneladasEstimadas) {
         this.id = id;
         this.planta = planta;
         this.personal = personal;
         this.contenedores = new ArrayList<>(contenedores);
         this.fecha = fecha;
-        this.totalEnvases = totalEnvases;
         this.toneladasEstimadas = toneladasEstimadas;
     }
 
@@ -44,10 +42,6 @@ public class Asignacion {
 
     public LocalDate getFecha() {
         return fecha;
-    }
-
-    public int getTotalEnvases() {
-        return totalEnvases;
     }
 
     public double getToneladasEstimadas() {

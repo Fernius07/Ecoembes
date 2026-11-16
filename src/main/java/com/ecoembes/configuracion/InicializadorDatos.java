@@ -60,30 +60,30 @@ public class InicializadorDatos implements CommandLineRunner {
     private void cargarContenedores() {
         LocalDate hoy = LocalDate.now();
 
-        crearContenedorSemilla("CONT-001", "Plaza Circular 1, Abando", "48001", 2000, 650, hoy);
-        crearContenedorSemilla("CONT-002", "Calle Buenos Aires 12, Abando", "48001", 2000, 1450, hoy);
-        crearContenedorSemilla("CONT-003", "Alameda Mazarredo 24, Abando", "48001", 2000, 1920, hoy);
-        crearContenedorSemilla("CONT-004", "Calle Hurtado de Amézaga 18", "48002", 2500, 800, hoy);
-        crearContenedorSemilla("CONT-005", "Calle Autonomía 10, Indautxu", "48002", 2500, 1850, hoy);
-        crearContenedorSemilla("CONT-006", "Calle San Francisco 32, Bilbao La Vieja", "48003", 1800, 520, hoy);
-        crearContenedorSemilla("CONT-007", "Plaza Corazón de María 5", "48003", 1800, 1710, hoy);
-        crearContenedorSemilla("CONT-008", "Calle Santutxu 40, Santutxu", "48004", 2200, 900, hoy);
-        crearContenedorSemilla("CONT-009", "Avenida Zumalacárregui 65, Begoña", "48004", 2200, 1650, hoy);
+        crearContenedorSemilla("CONT-001", "Plaza Circular 1, Abando", "48001", 0.10, 0.0325, hoy);
+        crearContenedorSemilla("CONT-002", "Calle Buenos Aires 12, Abando", "48001", 0.10, 0.0725, hoy);
+        crearContenedorSemilla("CONT-003", "Alameda Mazarredo 24, Abando", "48001", 0.10, 0.0960, hoy);
+        crearContenedorSemilla("CONT-004", "Calle Hurtado de Amézaga 18", "48002", 0.125, 0.0400, hoy);
+        crearContenedorSemilla("CONT-005", "Calle Autonomía 10, Indautxu", "48002", 0.125, 0.0925, hoy);
+        crearContenedorSemilla("CONT-006", "Calle San Francisco 32, Bilbao La Vieja", "48003", 0.09, 0.0260, hoy);
+        crearContenedorSemilla("CONT-007", "Plaza Corazón de María 5", "48003", 0.09, 0.0855, hoy);
+        crearContenedorSemilla("CONT-008", "Calle Santutxu 40, Santutxu", "48004", 0.11, 0.0450, hoy);
+        crearContenedorSemilla("CONT-009", "Avenida Zumalacárregui 65, Begoña", "48004", 0.11, 0.0825, hoy);
     }
 
     private void crearContenedorSemilla(String id, String direccion, String codigoPostal,
-                                        int capacidad, int envasesHoy, LocalDate hoy) {
-        NivelLlenado nivelActual = servicioContenedores.calcularNivelLlenado(envasesHoy, capacidad);
-        Contenedor contenedor = new Contenedor(id, direccion, codigoPostal, capacidad, envasesHoy, nivelActual);
+                                        double capacidad, double toneladasHoy, LocalDate hoy) {
+        NivelLlenado nivelActual = servicioContenedores.calcularNivelLlenado(toneladasHoy, capacidad);
+        Contenedor contenedor = new Contenedor(id, direccion, codigoPostal, capacidad, toneladasHoy, nivelActual);
 
         for (int diasAtras = 7; diasAtras >= 1; diasAtras--) {
             LocalDate fechaRegistro = hoy.minusDays(diasAtras);
             double factor = 0.25 + ((7 - diasAtras) * 0.10);
-            int envasesHistoricos = Math.min(capacidad, (int) Math.round(envasesHoy * factor));
-            NivelLlenado nivelHistorico = servicioContenedores.calcularNivelLlenado(envasesHistoricos, capacidad);
-            contenedor.agregarRegistroHistorico(new RegistroEstadoContenedor(fechaRegistro, envasesHistoricos, nivelHistorico));
+            double toneladasHistoricas = Math.min(capacidad, Math.round(toneladasHoy * factor * 100000.0) / 100000.0);
+            NivelLlenado nivelHistorico = servicioContenedores.calcularNivelLlenado(toneladasHistoricas, capacidad);
+            contenedor.agregarRegistroHistorico(new RegistroEstadoContenedor(fechaRegistro, toneladasHistoricas, nivelHistorico));
         }
-        contenedor.registrarEstado(hoy, envasesHoy, nivelActual);
+        contenedor.registrarEstado(hoy, toneladasHoy, nivelActual);
         repositorioContenedores.guardar(contenedor);
     }
 

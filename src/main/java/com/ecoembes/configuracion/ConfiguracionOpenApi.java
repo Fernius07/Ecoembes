@@ -14,6 +14,6 @@ public class ConfiguracionOpenApi {
                 .info(new Info()
                         .title("Servidor Ecoembes - API REST (Prototipo 1)")
                         .version("1.0")
-                        .description("API REST del Servidor Ecoembes para la gestión de contenedores, consulta de plantas de reciclaje y asignación de envases."));
+                        .description("API REST del Servidor Ecoembes para la gestión de contenedores, consulta de plantas de reciclaje y asignación de contenedores a plantas de reciclaje."));
     }
 }

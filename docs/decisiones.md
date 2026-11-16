@@ -9,21 +9,22 @@ En este documento se detallan las decisiones de diseño y las reglas de negocio 
    - En el API REST, el recurso `GET /api/contenedores` permite tanto listar todos los contenedores (cuando se invoca únicamente con `token` mediante `obtenerContenedores`) como filtrar por zona y fecha pasando los parámetros de consulta `codigoPostal` y `fecha` (mediante `obtenerContenedoresPorZona`).
 
 2. **Cálculo del nivel de llenado (`NivelLlenado`) y registro histórico diario (`PUT /api/contenedores/{id}/estado`)**:
-   - Se han definido tres niveles de llenado en función del porcentaje de ocupación respecto a la capacidad inicial del contenedor:
-     - `VERDE`: menos del 60 % de ocupación.
-     - `NARANJA`: entre el 60 % y el 90 % de ocupación.
-     - `ROJO`: más del 90 % de ocupación.
-   - Cuando el sensor *RecycloBin UltraEye* actualiza el estado diario de un contenedor (`PUT /api/contenedores/{id}/estado`), si no se indica el nivel de llenado explícitamente, el servidor lo calcula aplicando estos umbrales.
+   - El enumerado `NivelLlenado` define los rangos porcentuales (`porcentajeMinimo` y `porcentajeMaximo`) y el método `calcularSegunPorcentaje(double)` respecto a la `capacidadInicial` en toneladas del contenedor:
+     - `VERDE`: `[0.0 %, 60.0 %)` (`0.0` a `60.0`) de ocupación.
+     - `NARANJA`: `[60.0 %, 90.0 %]` (`60.0` a `90.0`) de ocupación.
+     - `ROJO`: `(90.0 %, 100.0 %]` (`90.0` a `100.0`) de ocupación.
+   - Cuando el sensor *RecycloBin UltraEye* actualiza el estado diario de un contenedor (`PUT /api/contenedores/{id}/estado`), si no se indica el nivel de llenado explícitamente, el servidor lo calcula invocando `NivelLlenado.calcularSegunPorcentaje` a partir de las toneladas actuales frente a la capacidad inicial.
    - Asimismo, cada llamada a `PUT /api/contenedores/{id}/estado` no solo actualiza el estado actual del contenedor, sino que **guarda un registro fechado (`RegistroEstadoContenedor`) en el historial del contenedor para la fecha del día (`LocalDate.now()`)** (actualizándolo de forma idempotente si ya existía una lectura en ese mismo día). Esto garantiza que la consulta de uso entre fechas (`GET /api/contenedores/{id}/uso`) disponga siempre de la serie histórica diaria completa.
 
-3. **Conversión de envases a toneladas (`toneladasEstimadas`)**:
-   - Para estimar el peso de los envases al realizar una asignación a una planta de reciclaje, se establece un factor fijo de **`0,05 kg` (50 gramos) por envase** (`PESO_ENVASE_KG = 0.05` en `ServicioAsignaciones`).
-   - Por tanto, la fórmula aplicada es: `toneladasEstimadas = totalEnvases * 0,05 / 1000`.
+3. **Unidad única en toneladas (`double`)**:
+   - Todo el modelo de dominio, los DTOs y las pasarelas externas trabajan directamente en **toneladas (`double`)**: la `capacidadInicial` y `toneladasActuales` de `Contenedor`, las `toneladas` de `RegistroEstadoContenedor` y la actualización de estado en `ActualizarEstadoDTO`.
+   - Al crear una asignación, `toneladasEstimadas` se calcula sumando directamente `toneladasActuales` de los contenedores asignados, eliminando la conversión previa desde envases (`PESO_ENVASE_KG`) y el campo redundante `totalEnvases`.
 
-4. **Reducción de la capacidad disponible de la planta tras cada asignación**:
+4. **Reducción de la capacidad de la planta y vaciado según la fecha de asignación**:
    - Cada planta de reciclaje (`PlasSB Ltd.` y `ContSocket Ltd.`) publica su capacidad diaria en toneladas para un horizonte de 10 días desde la fecha actual (`CapacidadDiariaPlanta`).
    - Al ejecutar `POST /api/asignaciones`, el servicio valida primero que ningún contenedor de la lista haya sido asignado ya en esa misma fecha y que `toneladasEstimadas <= toneladasDisponibles` en la planta para la fecha solicitada.
-   - Cuando la asignación es válida y se notifica a la planta a través de su pasarela (`PasarelaPlanta.notificarAsignacion`), **se descuenta automáticamente el valor de `toneladasEstimadas` de las `toneladasDisponibles` de esa planta para esa fecha** (`PlantaReciclaje.reducirCapacidad`). Si una asignación posterior intenta superar la capacidad restante de ese día, el servidor devuelve el error `400 Petición inválida`.
+   - Cuando la asignación es válida y se notifica a la planta a través de su pasarela (`PasarelaPlanta.notificarAsignacion(fecha, totalContenedores, toneladasEstimadas)`), **se descuenta automáticamente `toneladasEstimadas` de las `toneladasDisponibles` de esa planta para esa fecha** (`PlantaReciclaje.reducirCapacidad`). Si una asignación posterior intenta superar la capacidad restante de ese día, el servidor devuelve el error `400 Petición inválida`.
+   - Además, el comportamiento sobre los contenedores depende de la fecha de asignación: si la asignación se realiza para el día actual (`LocalDate.now()`), los contenedores asignados se vacían inmediatamente (`Contenedor.vaciar(hoy)`, quedando en `0.0` toneladas y nivel `VERDE`); si la fecha es futura, los contenedores no se vacían hoy y conservan su carga actual.
 
 5. **Gestión de sesiones en memoria (Patrón Gestión de Estado en `EstadoServidor`)**:
    - Al iniciar sesión (`POST /api/auth/login`), el servidor genera un token correspondiente a la marca de tiempo en milisegundos del momento del inicio de sesión y lo asocia al objeto `PersonalEcoembes` dentro de un mapa concurrente en `EstadoServidor`.

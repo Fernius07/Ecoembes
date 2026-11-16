@@ -24,7 +24,7 @@ public class EnsambladorDTO {
                 contenedor.getDireccion(),
                 contenedor.getCodigoPostal(),
                 contenedor.getCapacidadInicial(),
-                contenedor.getEnvasesActuales(),
+                contenedor.getToneladasActuales(),
                 contenedor.getNivelLlenado()
         );
     }
@@ -35,7 +35,7 @@ public class EnsambladorDTO {
                 contenedor.getDireccion(),
                 contenedor.getCodigoPostal(),
                 registro.getFecha(),
-                registro.getEnvases(),
+                registro.getToneladas(),
                 registro.getNivelLlenado()
         );
     }
@@ -70,7 +70,6 @@ public class EnsambladorDTO {
                 asignacion.getFecha(),
                 ids,
                 ids.size(),
-                asignacion.getTotalEnvases(),
                 asignacion.getToneladasEstimadas()
         );
     }

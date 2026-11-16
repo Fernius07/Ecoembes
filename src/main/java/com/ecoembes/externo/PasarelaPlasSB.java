@@ -1,9 +1,5 @@
 package com.ecoembes.externo;
 
-import com.ecoembes.dominio.CapacidadDiariaPlanta;
-import com.ecoembes.dominio.PlantaReciclaje;
-import com.ecoembes.excepcion.ExcepcionNoEncontrado;
-import com.ecoembes.excepcion.ExcepcionPeticionInvalida;
 import com.ecoembes.repositorio.RepositorioPlantas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,28 +31,23 @@ public class PasarelaPlasSB implements PasarelaPlanta {
     }
 
     @Override
+    public RepositorioPlantas obtenerRepositorioPlantas() {
+        return repositorioPlantas;
+    }
+
+    @Override
     public double consultarCapacidad(LocalDate fecha) {
-        PlantaReciclaje planta = repositorioPlantas.buscarPorId(ID_PLANTA)
-                .orElseThrow(() -> new ExcepcionNoEncontrado("Planta no encontrada: " + ID_PLANTA));
-        return planta.obtenerCapacidadEnFecha(fecha)
-                .map(CapacidadDiariaPlanta::getToneladasDisponibles)
-                .orElseThrow(() -> new ExcepcionPeticionInvalida(
-                        "La planta " + NOMBRE_PLANTA + " no tiene capacidad registrada para la fecha " + fecha));
+        return PasarelaPlanta.super.consultarCapacidad(fecha);
     }
 
     @Override
     public void reducirCapacidad(LocalDate fecha, double toneladas) {
-        PlantaReciclaje planta = repositorioPlantas.buscarPorId(ID_PLANTA)
-                .orElseThrow(() -> new ExcepcionNoEncontrado("Planta no encontrada: " + ID_PLANTA));
-        CapacidadDiariaPlanta capacidad = planta.obtenerCapacidadEnFecha(fecha)
-                .orElseThrow(() -> new ExcepcionPeticionInvalida(
-                        "La planta " + NOMBRE_PLANTA + " no tiene capacidad registrada para la fecha " + fecha));
-        capacidad.reducirToneladasDisponibles(toneladas);
+        PasarelaPlanta.super.reducirCapacidad(fecha, toneladas);
     }
 
     @Override
-    public void notificarAsignacion(LocalDate fecha, int totalContenedores, int totalEnvases, double toneladasEstimadas) {
-        log.info("[PlasSB Ltd.] Notificación recibida para {}: {} contenedores, {} envases ({} t)",
-                fecha, totalContenedores, totalEnvases, toneladasEstimadas);
+    public void notificarAsignacion(LocalDate fecha, int totalContenedores, double toneladasEstimadas) {
+        log.info("[PlasSB Ltd.] Notificación recibida para {}: {} contenedores ({} t)",
+                fecha, totalContenedores, toneladasEstimadas);
     }
 }

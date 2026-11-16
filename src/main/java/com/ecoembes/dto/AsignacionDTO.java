@@ -28,9 +28,6 @@ public record AsignacionDTO(
         @Schema(description = "Número total de contenedores asignados", example = "2")
         int totalContenedores,
 
-        @Schema(description = "Suma total de envases", example = "1450")
-        int totalEnvases,
-
         @Schema(description = "Peso estimado en toneladas", example = "0.0725")
         double toneladasEstimadas
 ) {

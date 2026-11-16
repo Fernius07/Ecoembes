@@ -12,7 +12,7 @@ Resumen de las pruebas realizadas desde la interfaz de Swagger UI (`http://local
 | 06 | `POST /api/contenedores` | Intento de alta con ID repetido `CONT-001` | `400 Petición inválida` | `400 Petición inválida` | `capturas/06_create_container_duplicado_400.png` |
 | 07 | `GET /api/contenedores/{id}/uso` | `id=CONT-001`, del `2026-11-04` al `2026-11-11` | `200 OK` con historial entre fechas | `200 OK` | `capturas/07_get_container_usage_ok.png` |
 | 08 | `GET /api/contenedores/{id}/uso` | Fechas invertidas (`fechaInicio > fechaFin`) | `400 Petición inválida` | `400 Petición inválida` | `capturas/08_get_container_usage_fechas_invalidas_400.png` |
-| 09 | `PUT /api/contenedores/{id}/estado` | `id=CONT-010`, `envases=1600` | `200 OK` con cálculo de nivel `NARANJA` y registro en el histórico del día | `200 OK` | `capturas/09_update_container_status_ok.png` |
+| 09 | `PUT /api/contenedores/{id}/estado` | `id=CONT-010`, `toneladas=0.08` | `200 OK` con cálculo de nivel `NARANJA` y registro en el histórico del día | `200 OK` | `capturas/09_update_container_status_ok.png` |
 | 10 | `GET /api/plantas` | `token` activo | `200 OK` con `PlasSB Ltd.` y `ContSocket Ltd.` | `200 OK` | `capturas/10_get_plants_ok.png` |
 | 11 | `GET /api/plantas/{id}/capacidad` | `id=PLASSB`, `fecha=2026-11-11` | `200 OK` con toneladas disponibles | `200 OK` (`1.5 t`) | `capturas/11_get_plant_capacity_ok.png` |
 | 12 | `POST /api/asignaciones` | `PLASSB`, `["CONT-001", "CONT-004"]`, `2026-11-11` | `201 Creado` con datos de auditoría, cálculo de toneladas y descuento de capacidad en la planta | `201 Creado` (`ASIG-001`) | `capturas/12_create_assignment_ok.png` |

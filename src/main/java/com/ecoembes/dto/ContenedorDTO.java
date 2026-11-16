@@ -14,11 +14,11 @@ public record ContenedorDTO(
         @Schema(description = "Código postal", example = "48001")
         String codigoPostal,
 
-        @Schema(description = "Capacidad máxima en envases", example = "2000")
-        int capacidadInicial,
+        @Schema(description = "Capacidad máxima en toneladas", example = "0.1")
+        double capacidadInicial,
 
-        @Schema(description = "Cantidad actual de envases", example = "650")
-        int envasesActuales,
+        @Schema(description = "Cantidad actual en toneladas", example = "0.0325")
+        double toneladasActuales,
 
         @Schema(description = "Nivel de llenado actual", example = "VERDE")
         NivelLlenado nivelLlenado

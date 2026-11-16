@@ -12,36 +12,43 @@ public class Contenedor {
     private String id;
     private String direccion;
     private String codigoPostal;
-    private int capacidadInicial;
-    private int envasesActuales;
-    private NivelLlenado nivelLlenado;
-    private List<RegistroEstadoContenedor> historial;
+    private double capacidadInicial;
+    private final List<RegistroEstadoContenedor> historial;
 
-    public Contenedor(String id, String direccion, String codigoPostal, int capacidadInicial,
-                      int envasesActuales, NivelLlenado nivelLlenado) {
+    public Contenedor(String id, String direccion, String codigoPostal, double capacidadInicial) {
+        this(id, direccion, codigoPostal, capacidadInicial, 0.0, NivelLlenado.VERDE);
+    }
+
+    public Contenedor(String id, String direccion, String codigoPostal, double capacidadInicial,
+                      double toneladasIniciales, NivelLlenado nivelInicial) {
         this.id = id;
         this.direccion = direccion;
         this.codigoPostal = codigoPostal;
         this.capacidadInicial = capacidadInicial;
-        this.envasesActuales = envasesActuales;
-        this.nivelLlenado = nivelLlenado;
         this.historial = new ArrayList<>();
+        registrarEstado(LocalDate.now(), toneladasIniciales, nivelInicial);
     }
 
-    public synchronized RegistroEstadoContenedor registrarEstado(LocalDate fecha, int envases, NivelLlenado nivel) {
-        this.envasesActuales = envases;
-        this.nivelLlenado = nivel;
-        RegistroEstadoContenedor registro = new RegistroEstadoContenedor(fecha, envases, nivel);
-        historial.removeIf(r -> r.getFecha().equals(fecha));
-        historial.add(registro);
-        historial.sort(Comparator.comparing(RegistroEstadoContenedor::getFecha));
+    public synchronized RegistroEstadoContenedor registrarEstado(LocalDate fecha, double toneladas, NivelLlenado nivel) {
+        RegistroEstadoContenedor registro = new RegistroEstadoContenedor(fecha, toneladas, nivel);
+        agregarRegistroHistorico(registro);
         return registro;
+    }
+
+    public synchronized void vaciar(LocalDate fecha) {
+        registrarEstado(fecha, 0.0, NivelLlenado.VERDE);
     }
 
     public synchronized void agregarRegistroHistorico(RegistroEstadoContenedor registro) {
         historial.removeIf(r -> r.getFecha().equals(registro.getFecha()));
         historial.add(registro);
         historial.sort(Comparator.comparing(RegistroEstadoContenedor::getFecha));
+    }
+
+    public synchronized Optional<RegistroEstadoContenedor> obtenerUltimoEstado() {
+        return historial.isEmpty()
+                ? Optional.empty()
+                : Optional.of(historial.get(historial.size() - 1));
     }
 
     public synchronized Optional<RegistroEstadoContenedor> obtenerEstadoEnFecha(LocalDate fecha) {
@@ -69,16 +76,16 @@ public class Contenedor {
         return codigoPostal;
     }
 
-    public int getCapacidadInicial() {
+    public double getCapacidadInicial() {
         return capacidadInicial;
     }
 
-    public int getEnvasesActuales() {
-        return envasesActuales;
+    public double getToneladasActuales() {
+        return obtenerUltimoEstado().map(RegistroEstadoContenedor::getToneladas).orElse(0.0);
     }
 
     public NivelLlenado getNivelLlenado() {
-        return nivelLlenado;
+        return obtenerUltimoEstado().map(RegistroEstadoContenedor::getNivelLlenado).orElse(NivelLlenado.VERDE);
     }
 
     public List<RegistroEstadoContenedor> getHistorial() {

@@ -5,12 +5,12 @@ import java.time.LocalDate;
 public class RegistroEstadoContenedor {
 
     private LocalDate fecha;
-    private int envases;
+    private double toneladas;
     private NivelLlenado nivelLlenado;
 
-    public RegistroEstadoContenedor(LocalDate fecha, int envases, NivelLlenado nivelLlenado) {
+    public RegistroEstadoContenedor(LocalDate fecha, double toneladas, NivelLlenado nivelLlenado) {
         this.fecha = fecha;
-        this.envases = envases;
+        this.toneladas = toneladas;
         this.nivelLlenado = nivelLlenado;
     }
 
@@ -18,8 +18,8 @@ public class RegistroEstadoContenedor {
         return fecha;
     }
 
-    public int getEnvases() {
-        return envases;
+    public double getToneladas() {
+        return toneladas;
     }
 
     public NivelLlenado getNivelLlenado() {
