@@ -264,16 +264,16 @@ Resumen de las pruebas realizadas desde la interfaz de Swagger UI (`http://local
 | 01 | `POST /api/auth/login` | `email: ian.anaya@ecoembes.com`, `contrasena: ecoembes123` | `200 OK` con token de sesión | `200 OK` | `docs/capturas/01_login_ok.png` |
 | 02 | `POST /api/auth/login` | Contraseña incorrecta | `401 No autorizado` | `401 No autorizado` | `docs/capturas/02_login_error_401.png` |
 | 03 | `GET /api/contenedores` | `token` activo (sin filtros opcionales) | `200 OK` con la lista de contenedores | `200 OK` (9 contenedores) | `docs/capturas/03_get_containers_ok.png` |
-| 04 | `GET /api/contenedores` (por zona) | `codigoPostal=48001`, `fecha=2026-11-11` | `200 OK` con estados de la zona `48001` | `200 OK` (3 contenedores) | `docs/capturas/04_get_containers_zone_ok.png` |
+| 04 | `GET /api/contenedores` (por zona) | `codigoPostal=48001`, `fecha=2026-11-16` | `200 OK` con estados de la zona `48001` | `200 OK` (3 contenedores) | `docs/capturas/04_get_containers_zone_ok.png` |
 | 05 | `POST /api/contenedores` | Alta de `CONT-010` en CP `48009` | `201 Creado` | `201 Creado` | `docs/capturas/05_create_container_ok.png` |
 | 06 | `POST /api/contenedores` | Intento de alta con ID repetido `CONT-001` | `400 Petición inválida` | `400 Petición inválida` | `docs/capturas/06_create_container_duplicado_400.png` |
-| 07 | `GET /api/contenedores/{id}/uso` | `id=CONT-001`, del `2026-11-04` al `2026-11-11` | `200 OK` con historial entre fechas | `200 OK` | `docs/capturas/07_get_container_usage_ok.png` |
+| 07 | `GET /api/contenedores/{id}/uso` | `id=CONT-001`, del `2026-11-09` al `2026-11-16` | `200 OK` con historial entre fechas | `200 OK` | `docs/capturas/07_get_container_usage_ok.png` |
 | 08 | `GET /api/contenedores/{id}/uso` | Fechas invertidas (`fechaInicio > fechaFin`) | `400 Petición inválida` | `400 Petición inválida` | `docs/capturas/08_get_container_usage_fechas_invalidas_400.png` |
 | 09 | `PUT /api/contenedores/{id}/estado` | `id=CONT-010`, `toneladas=0.08` | `200 OK` con cálculo de nivel `NARANJA` y registro en el histórico del día | `200 OK` | `docs/capturas/09_update_container_status_ok.png` |
 | 10 | `GET /api/plantas` | `token` activo | `200 OK` con `PlasSB Ltd.` y `ContSocket Ltd.` | `200 OK` | `docs/capturas/10_get_plants_ok.png` |
-| 11 | `GET /api/plantas/{id}/capacidad` | `id=PLASSB`, `fecha=2026-11-11` | `200 OK` con toneladas disponibles | `200 OK` (`1.5 t`) | `docs/capturas/11_get_plant_capacity_ok.png` |
-| 12 | `POST /api/asignaciones` | `PLASSB`, `["CONT-001", "CONT-004"]`, `2026-11-11` | `201 Creado` con datos de auditoría, cálculo de toneladas y descuento de capacidad en la planta | `201 Creado` (`ASIG-001`) | `docs/capturas/12_create_assignment_ok.png` |
-| 13 | `POST /api/asignaciones` | `PLASSB`, `["CONT-003"]`, `2026-11-12` (capacidad `0.02 t`) | `400 Petición inválida` por falta de capacidad disponible en la planta | `400 Petición inválida` | `docs/capturas/13_create_assignment_capacidad_excedida_400.png` |
+| 11 | `GET /api/plantas/{id}/capacidad` | `id=PLASSB`, `fecha=2026-11-16` | `200 OK` con toneladas disponibles | `200 OK` (`1.5 t`) | `docs/capturas/11_get_plant_capacity_ok.png` |
+| 12 | `POST /api/asignaciones` | `PLASSB`, `["CONT-001", "CONT-004"]`, `2026-11-16` | `201 Creado` con datos de auditoría, cálculo de toneladas y descuento de capacidad en la planta | `201 Creado` (`ASIG-001`) | `docs/capturas/12_create_assignment_ok.png` |
+| 13 | `POST /api/asignaciones` | `PLASSB`, `["CONT-003"]`, `2026-11-17` (capacidad `0.02 t`) | `400 Petición inválida` por falta de capacidad disponible en la planta | `400 Petición inválida` | `docs/capturas/13_create_assignment_capacidad_excedida_400.png` |
 | 14 | `POST /api/auth/logout` | `token` activo | `204 Sin contenido` | `204 Sin contenido` | `docs/capturas/14_logout_ok.png` |
 | 15 | `GET /api/plantas` | Llamada con el token tras cerrar sesión | `401 No autorizado` | `401 No autorizado` | `docs/capturas/15_llamada_tras_logout_401.png` |
 
@@ -367,9 +367,3 @@ Otra motivación importante ha sido contrastar la información entre ambas herra
 También hemos recurrido a ellas para agilizar tareas que podían resultar repetitivas y dedicar más tiempo al análisis de los requisitos, al diseño de la arquitectura y a la comprobación del funcionamiento del servidor mediante Swagger.
 
 En cualquier caso, nuestra intención no ha sido delegar todo el proyecto en la Inteligencia Artificial. Hemos participado activamente en el diseño, la toma de decisiones, la adaptación del código y la validación de las funcionalidades implementadas. Consideramos que la IA debe ser una herramienta de apoyo y no un sustituto de nuestro propio trabajo y aprendizaje.
-
----
-
-## 10. Memoria de Entrega
-
-- [`docs/Entrega_Prototipo1.docx`](docs/Entrega_Prototipo1.docx): Documento Word completo de entrega del Prototipo 1 (API REST, arquitectura, patrones, decisiones de diseño, diagrama de clases UML, validación en Swagger UI y reflexión sobre IA Generativa).
