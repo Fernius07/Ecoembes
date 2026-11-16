@@ -36,7 +36,7 @@ com.ecoembes
  └── excepcion     -> Excepciones de negocio y ManejadorGlobalExcepciones (@RestControllerAdvice)
 ```
 
-- **Patrón Fachada (`com.ecoembes.fachada.EcoembesController`):** único punto de entrada REST del servidor bajo el prefijo `/api` que centraliza las operaciones y delega en la capa de servicios. Los nombres de sus métodos coinciden exactamente con los del diseño del API y el diagrama UML de clases.
+- **Patrón Fachada (`com.ecoembes.fachada.EcoembesController`):** único punto de entrada REST del servidor bajo el prefijo `/api` que centraliza las operaciones y delega en la capa de servicios. Los nombres de sus métodos coinciden exactamente con los del diseño del API y los diagramas UML de clases y de secuencia.
 - **Patrón Servicio de Aplicación (`com.ecoembes.servicio.*`):** encapsula la lógica de negocio, validaciones, cálculo de niveles de llenado y vaciado de contenedores según la fecha de asignación (`ServicioAutenticacion`, `ServicioContenedores`, `ServicioPlantas` y `ServicioAsignaciones`).
 - **Patrón Objeto de Transferencia de Datos y Ensamblador (`com.ecoembes.dto.*` y `com.ecoembes.ensamblador.EnsambladorDTO`):** desacopla las entidades del dominio de las peticiones y respuestas JSON expuestas por el API REST.
 - **Patrón Gestión de Estado (`com.ecoembes.estado.EstadoServidor`):** mantiene en memoria un mapa concurrente (`ConcurrentHashMap<String, PersonalEcoembes>`) con los tokens activos (generados a partir de la marca de tiempo en milisegundos del inicio de sesión) y el empleado autenticado.
@@ -77,7 +77,7 @@ com.ecoembes
 
 7. **Gestión de sesiones en memoria (`EstadoServidor`) y coherencia de nombres**:
    - Al iniciar sesión (`POST /api/auth/login`), el servidor genera un token correspondiente a la marca de tiempo en milisegundos y lo asocia al objeto `PersonalEcoembes` dentro de `EstadoServidor`. Al cerrar sesión (`POST /api/auth/logout`), se elimina el token del mapa y cualquier petición posterior con ese token devuelve `401 No autorizado`.
-   - Todos los paquetes, clases, atributos, rutas del API REST y el diagrama UML están íntegramente en español, con nombres idénticos en las operaciones de `EcoembesController`, en esta documentación y en `docs/diagramas/project.xml`.
+   - Todos los paquetes, clases, atributos, rutas del API REST y los diagramas UML están íntegramente en español, con nombres idénticos en las operaciones de `EcoembesController`, en esta documentación y en `docs/diagramas/`.
 
 ---
 
@@ -107,11 +107,43 @@ Una vez iniciado el servidor, la aplicación escucha en el puerto `8080`:
 
 ---
 
-## 5. Diagrama de Clases UML
+## 5. Diagramas UML
 
-El modelo de arquitectura completo se encuentra en el proyecto de Visual Paradigm [`docs/diagramas/project.xml`](docs/diagramas/project.xml):
+### 5.1. Diagrama de Clases UML
 
 ![Diagrama de Clases del Servidor Ecoembes (Prototipo 1)](docs/diagramas/Diagrama%20de%20Clases%20Ecoembes.png)
+
+### 5.2. Diagramas de Secuencia UML
+
+#### 1. Inicio de sesión (`login`)
+![Diagrama de Secuencia: login](docs/diagramas/secuencia_01_login.jpg)
+
+#### 2. Cierre de sesión (`logout`)
+![Diagrama de Secuencia: logout](docs/diagramas/secuencia_02_logout.jpg)
+
+#### 3. Creación de contenedor (`crearContenedor`)
+![Diagrama de Secuencia: crearContenedor](docs/diagramas/secuencia_03_crearContenedor.jpg)
+
+#### 4. Listado de contenedores (`obtenerContenedores`)
+![Diagrama de Secuencia: obtenerContenedores](docs/diagramas/secuencia_04_obtenerContenedores.jpg)
+
+#### 5. Consulta de contenedores por zona y fecha (`obtenerContenedoresPorZona`)
+![Diagrama de Secuencia: obtenerContenedoresPorZona](docs/diagramas/secuencia_05_obtenerContenedoresPorZona.jpg)
+
+#### 6. Histórico de uso de un contenedor (`obtenerUsoContenedor`)
+![Diagrama de Secuencia: obtenerUsoContenedor](docs/diagramas/secuencia_06_obtenerUsoContenedor.jpg)
+
+#### 7. Actualización de estado del contenedor (`actualizarEstadoContenedor`)
+![Diagrama de Secuencia: actualizarEstadoContenedor](docs/diagramas/secuencia_07_actualizarEstadoContenedor.jpg)
+
+#### 8. Listado de plantas de reciclaje (`obtenerPlantas`)
+![Diagrama de Secuencia: obtenerPlantas](docs/diagramas/secuencia_08_obtenerPlantas.jpg)
+
+#### 9. Consulta de capacidad disponible de planta (`obtenerCapacidadPlanta`)
+![Diagrama de Secuencia: obtenerCapacidadPlanta](docs/diagramas/secuencia_09_obtenerCapacidadPlanta.jpg)
+
+#### 10. Asignación de contenedores a planta (`crearAsignacion`)
+![Diagrama de Secuencia: crearAsignacion](docs/diagramas/secuencia_10_crearAsignacion.jpg)
 
 ---
 
